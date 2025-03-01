@@ -12,7 +12,7 @@ build-no-cache:
 
 # Run the container with volume
 container:
-	docker run --rm --name $(CONTAINER_NAME) --gpus all -v $(WORKSPACE_DIR):/workspace $(IMAGE_NAME) bash
+	docker run --rm --name $(CONTAINER_NAME) --gpus all -v $(WORKSPACE_DIR):/workspace -e PYTHONPATH="/workspace/src:$$PYTHONPATH" $(IMAGE_NAME) bash
 
 # Remove the image
 remove-image:
