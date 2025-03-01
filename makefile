@@ -12,7 +12,11 @@ build-no-cache:
 
 # Run the container with volume
 container:
-	docker run --rm --name $(CONTAINER_NAME) --gpus all -v $(WORKSPACE_DIR):/workspace -e PYTHONPATH="/workspace/src:$$PYTHONPATH" $(IMAGE_NAME) bash
+	docker run -it --rm --name pytorch-kan --gpus all \
+	-v /home/fabio/Documents/GitHub/Pytorch_KAN/pytorch_kan:/workspace/src \
+	-e PYTHONPATH="/workspace/src:$$PYTHONPATH" \
+	--ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
+	--privileged pytorch-kan bash
 
 # Remove the image
 remove-image:
