@@ -1,78 +1,69 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from src.pytorch_kan.basis.locals import *
 
-class MatrixKAN(nn.Module):
-    def __init__(self, input_dim, output_dim, hidden_layers, spline_degree=3, grid_size=10, grid_epsilon=0.1):
-        super(MatrixKAN, self).__init__()
+
+class KANLayer(nn.Module):
+    def __init__(self, input_dim, output_dim, spline_degree=3, grid_size=100, grid_epsilon=1e-6):
+        super(KANLayer, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.hidden_layers = hidden_layers
         self.spline_degree = spline_degree
         self.grid_size = grid_size
         self.grid_epsilon = grid_epsilon
+
+        # Precompute basis matrix for the given spline degree
+        self.register_buffer('basis_matrix', binomial_coefficients_matrix(spline_degree))
+
+        # Learnable polynomial coefficients with grid size dimension
+        self.poly_matrix = nn.Parameter(torch.zeros(input_dim, output_dim, grid_size, spline_degree + 1))
+        nn.init.kaiming_uniform_(self.poly_matrix, mode='fan_in', nonlinearity='relu')
+
+        # Layer normalization for input standardization
+        self.norm = nn.LayerNorm(input_dim)
+    
+    def forward(self, x):
+        batch_size = x.size(0)
         
-        self.layers = nn.ModuleList()
-        for i in range(len(hidden_layers)):
-            if i == 0:
-                self.layers.append(self._create_layer(input_dim, hidden_layers[i]))
-            else:
-                self.layers.append(self._create_layer(hidden_layers[i-1], hidden_layers[i]))
-        self.layers.append(self._create_layer(hidden_layers[-1], output_dim))
-        
-        self.register_buffer('basis_matrix', self._create_basis_matrix())
+        # Normalize and scale input to [0,1] range
+        x = self.norm(x)
+        x = torch.clamp(x, -1.0 + self.grid_epsilon, 1.0 - self.grid_epsilon)
+        x = (x + 1) / 2
 
-    def _create_layer(self, input_size, output_size):
-        return nn.Parameter(torch.randn(input_size, output_size, self.grid_size))
-
-    def _create_basis_matrix(self):
-        t = torch.linspace(0, 1, self.spline_degree + 1)
-        basis_matrix = torch.zeros((self.spline_degree + 1, self.spline_degree + 1))
-        for i in range(self.spline_degree + 1):
-            basis_matrix[i] = t ** i
-        return torch.inverse(basis_matrix)
-
-    def _calculate_power_bases(self, x):
-        x = torch.clamp(x, 0, 1 - self.grid_epsilon)
+        # Calculate grid indices and fractional positions
         indices = torch.floor(x * self.grid_size).long()
         t = (x * self.grid_size) - indices
+
+        # Calculate power bases
         power_bases = torch.stack([t**i for i in range(self.spline_degree + 1)], dim=-1)
-        return indices, power_bases
-
-    def forward(self, x):
-        for layer in self.layers:
-            indices, power_bases = self._calculate_power_bases(x)
-            spline_outputs = torch.einsum('bij,jk,bik->bi', power_bases, self.basis_matrix, layer[..., indices])
-            x = spline_outputs
-        return x
-
-    def train_model(self, X, y, epochs=1000, lr=0.01):
-        optimizer = optim.Adam(self.parameters(), lr=lr)
-        criterion = nn.MSELoss()
         
-        for epoch in range(epochs):
-            optimizer.zero_grad()
-            y_pred = self(X)
-            loss = criterion(y_pred, y)
-            loss.backward()
-            optimizer.step()
-            
-            if (epoch + 1) % 100 == 0:
-                print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}')
-
-# Example usage
-if __name__ == "__main__":
-    # Generate some example data
-    X = torch.rand(100, 1)
-    y = torch.sin(2 * torch.pi * X).squeeze()
-
-    # Create and train the model
-    model = MatrixKAN(input_dim=1, output_dim=1, hidden_layers=[10, 10], spline_degree=3)
-    model.train_model(X, y)
-
-    # Make predictions
-    X_test = torch.linspace(0, 1, 100).reshape(-1, 1)
-    with torch.no_grad():
-        y_pred = model(X_test)
-
-    print("Training complete. Use model(X) for predictions.")
+        # Compute basis values by multiplying with basis matrix
+        basis_values = torch.matmul(power_bases, self.basis_matrix)
+        
+        # Prepare for efficient batch gathering of coefficients
+        # Flatten the batch and input dimensions for indexing
+        flat_input_indices = torch.arange(self.input_dim, device=x.device).repeat(batch_size)
+        flat_indices = indices.reshape(-1)
+        
+        # Gather coefficients using flattened indices
+        # Shape: [batch_size*input_dim, output_dim, spline_degree+1]
+        flat_coeffs = self.poly_matrix[flat_input_indices, :, flat_indices, :]
+        
+        # Reshape back to original dimensions
+        # Shape: [batch_size, input_dim, output_dim, spline_degree+1]
+        gathered_coeffs = flat_coeffs.reshape(batch_size, self.input_dim, self.output_dim, self.spline_degree + 1)
+        
+        # Expand basis values for broadcasting
+        # Shape: [batch_size, input_dim, 1, spline_degree+1]
+        basis_values_expanded = basis_values.unsqueeze(2)
+        
+        # Compute weighted basis values
+        # Shape: [batch_size, input_dim, output_dim]
+        weighted_basis = (basis_values_expanded * gathered_coeffs).sum(dim=-1)
+        
+        # Sum across input dimension to get final output
+        # Shape: [batch_size, output_dim]
+        output = weighted_basis.sum(dim=1)
+        
+        return output
