@@ -117,4 +117,4 @@ celerybeat-schedule
 ./models/
 ./notebooks/
 ./output/
-./dump/
+pytorch_KAN/dump/
