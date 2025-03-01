@@ -6,10 +6,14 @@ WORKDIR /workspace
 # Copy requirements file
 COPY requirements.txt .
 
-# Install dependencies
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get install python3-pip -y && \
-    pip3 install --no-cache-dir -r requirements.txt
+# Install Python and create virtual environment
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv && \
+    python3 -m venv /workspace/venv && \
+    . /workspace/venv/bin/activate && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Set environment variable to use the virtual environment
+ENV PATH="/workspace/venv/bin:$PATH"
 
 # Copy the rest of the application
 COPY . .
