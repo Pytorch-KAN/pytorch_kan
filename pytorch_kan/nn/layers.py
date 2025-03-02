@@ -4,9 +4,13 @@ import torch.optim as optim
 from src.pytorch_kan.basis.locals import *
 
 
-class KANLayer(nn.Module):
+"""
+Here the different layers are implemented according to different approaches of Kolmogorov-Arnold representation Theorem.
+"""
+
+class MatrixKANLayer(nn.Module):
     def __init__(self, input_dim, output_dim, spline_degree=3, grid_size=100, grid_epsilon=1e-6):
-        super(KANLayer, self).__init__()
+        super(MatrixKANLayer, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.spline_degree = spline_degree
@@ -35,19 +39,19 @@ class KANLayer(nn.Module):
         indices = torch.floor(x * self.grid_size).long()
         t = (x * self.grid_size) - indices
 
-        # Calculate power bases
+        # Calculate power bases [1, t, t^2, ..., t^(spline_degree)]
         power_bases = torch.stack([t**i for i in range(self.spline_degree + 1)], dim=-1)
         
         # Compute basis values by multiplying with basis matrix
         basis_values = torch.matmul(power_bases, self.basis_matrix)
         
         # Prepare for efficient batch gathering of coefficients
-        # Flatten the batch and input dimensions for indexing
+        # Flatten the batch and input dimensions for indexing if input_dim = 3 [0, 1, 2] * batch_size
         flat_input_indices = torch.arange(self.input_dim, device=x.device).repeat(batch_size)
         flat_indices = indices.reshape(-1)
         
         # Gather coefficients using flattened indices
-        # Shape: [batch_size*input_dim, output_dim, spline_degree+1]
+        # Shape: [batch_size*input_dim, output_dim, spline_degree+1] Select the specific input_dimension, all the output_dimension, the sepcific grid_Dimension and all the spline_degree dimension
         flat_coeffs = self.poly_matrix[flat_input_indices, :, flat_indices, :]
         
         # Reshape back to original dimensions
@@ -67,3 +71,4 @@ class KANLayer(nn.Module):
         output = weighted_basis.sum(dim=1)
         
         return output
+    

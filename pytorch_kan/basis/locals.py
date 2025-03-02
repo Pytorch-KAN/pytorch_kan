@@ -1,28 +1,33 @@
 import torch
-
+from functools import lru_cache
 
 # For B-Splines
 
 # The best option so far
+@lru_cache(maxsize=None)
 def binomial_coefficients_matrix(spline_degree):
     """
     Generate the matrix of binomial coefficients for a spline of a given degree.
-    This is the method implemented in MatrixKAN for efficient KAN computation with splines.
+    Each entry [i, j] corresponds to (-1)^(i-j) * C(i, j), where C(i, j) is the binomial coefficient.
     """
-
+    # Initialize the basis matrix with zeros
     basis = torch.zeros(spline_degree + 1, spline_degree + 1)
+    
+    # Fill the matrix using the multiplicative formula for binomial coefficients
     for i in range(spline_degree + 1):
-        for j in range(i + 1):
-            # Calculate binomial coefficient C(i,j)
+        for j in range(i + 1):  # Binomial coefficients are defined only for j <= i
+            # Compute C(i, j) = i! / (j! * (i-j)!)
             coef = 1
-            for k in range(j):
-                coef = coef * (i - k) // (k + 1)
-
-            # Fill the matrix
-            basis[i, j] = coef * (-1) ** (i - j)
+            for k in range(1, j + 1):  # Multiplicative formula avoids factorial overflow
+                coef *= (i - k + 1)
+                coef //= k
+            
+            # Assign value with alternating sign
+            basis[i, j] = coef * (-1)**(i - j)
+    
     return basis
 
-
+@lru_cache(maxsize=None)
 def vandermonde_matrix(spline_degree):
     """
     Generate the Vandermonde matrix for a spline of a given degree, which is used to calculate the power bases of the spline.
