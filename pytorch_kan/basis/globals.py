@@ -1,8 +1,9 @@
 import torch
 import torch.nn.functional as F
+from src.pytorch_kan.basis.base import BaseBasis
 
 
-class OrthogonalPolynomial:
+class OrthogonalPolynomial(BaseBasis):
     """
     A class for calculating orthogonal polynomial basis tensors used in Kolmogorov-Arnold Networks (KAN).
 
@@ -219,3 +220,206 @@ class OrthogonalPolynomial:
                 polys[..., n] = (B * polys[..., n - 1] - C * polys[..., n - 2]) / A
 
         return polys
+
+
+class FourierBasis(BaseBasis):
+    """
+    A class for calculating Fourier basis tensors used in Kolmogorov-Arnold Networks (KAN).
+
+    Attributes:
+        order (int): The order of the Fourier basis.
+    
+    Raises:
+        ValueError: If the order is negative.
+    """
+
+    def __init__(self, order: int):
+        """
+        Initialize the FourierBasis instance.
+
+        Args:
+            order (int): The order of the Fourier basis.
+
+        Raises:
+            ValueError: If the order is negative.
+        """
+        assert order >= 0, "Order must be a non-negative integer."
+
+        self.order = order
+
+    def calculate_fourier(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Calculate the Fourier basis tensor for the given input.
+
+        Args:
+            x (torch.Tensor): Input tensor.
+
+        Returns:
+            torch.Tensor: Calculated Fourier basis tensor with both sine and cosine components.
+        """
+        # Scale input to [0, 2π] for proper periodicity
+        x_scaled = torch.clamp((x + 1), -1, 1) * torch.pi  # Map from [-1, 1] to [-π, π]
+        
+        # Initialize result tensor with 2*order+1 basis functions:
+        # - 1 constant function (DC component)
+        # - order sine functions
+        # - order cosine functions
+        result = torch.zeros(*x.shape, 2 * self.order + 1, device=x.device)
+        
+        # DC component (constant)
+        result[..., 0] = 1.0
+        
+        # Generate frequency components
+        for k in range(1, self.order + 1):
+            # Cosine components: cos(kπx)
+            result[..., k] = torch.cos(k * x_scaled)
+            
+            # Sine components: sin(kπx)
+            result[..., k + self.order] = torch.sin(k * x_scaled)
+        
+        return result
+
+
+class SmoothActivationBasis(BaseBasis):
+    """
+    A class for calculating basis tensors using smooth activation functions in Kolmogorov-Arnold Networks (KAN).
+
+    This class supports various types of smooth activation functions including:
+    - SiLU/Swish: x * sigmoid(x)
+    - GELU: x * Φ(x) where Φ is the CDF of the standard normal distribution
+    - Softplus: log(1 + exp(x))
+    - Mish: x * tanh(softplus(x))
+    - ELU: x if x > 0 else α * (exp(x) - 1)
+    - TanhShrink: x - tanh(x)
+
+    Attributes:
+        activation_type (str): The type of smooth activation function to use.
+        alpha (float): Parameter for certain activation functions like ELU.
+        beta (float): Additional parameter for certain activation functions.
+        
+    Raises:
+        ValueError: If an unsupported activation type is specified.
+    """
+
+    def __init__(self, activation_type: str, alpha: float = 1.0, beta: float = 1.0):
+        """
+        Initialize the SmoothActivationBasis instance.
+
+        Args:
+            activation_type (str): The type of smooth activation function
+                                  ('silu', 'gelu', 'softplus', 'mish', 'elu', 'tanh_shrink').
+            alpha (float, optional): Parameter for certain activation functions. Defaults to 1.0.
+            beta (float, optional): Additional parameter for certain activation functions. Defaults to 1.0.
+
+        Raises:
+            ValueError: If an unsupported activation type is specified.
+        """
+        self.ACTIVATION_WRAPPER = {
+            "silu": self._silu,
+            "gelu": self._gelu,
+            "softplus": self._softplus,
+            "mish": self._mish,
+            "elu": self._elu,
+            "tanh_shrink": self._tanh_shrink,
+        }
+        
+        assert activation_type in self.ACTIVATION_WRAPPER.keys(), f"Unsupported activation type: {activation_type}"
+        
+        self.activation_type = activation_type
+        self.alpha = alpha
+        self.beta = beta
+        
+    def calculate_activation(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Calculate the basis tensor using the specified smooth activation function for the given input.
+
+        Args:
+            x (torch.Tensor): Input tensor.
+
+        Returns:
+            torch.Tensor: Calculated basis tensor using the specified activation function.
+        """
+        return self.ACTIVATION_WRAPPER[self.activation_type](x)
+    
+    def _silu(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        SiLU/Swish activation function: x * sigmoid(x)
+        """
+        return x * torch.sigmoid(x)
+    
+    def _gelu(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        GELU activation function: x * Φ(x) where Φ is the CDF of the standard normal distribution
+        This uses the approximation: 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))
+        """
+        return F.gelu(x)
+    
+    def _softplus(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Softplus activation function: log(1 + exp(β*x))/β
+        Uses the beta parameter for scaling the sharpness
+        """
+        # Stable implementation to avoid overflow
+        result = torch.zeros_like(x)
+        mask = x > 20  # threshold to avoid overflow in exp
+        
+        # For large values, softplus(x) ≈ x
+        result[mask] = x[mask]
+        
+        # For small/medium values, use the standard formula
+        not_mask = ~mask
+        result[not_mask] = torch.log(1 + torch.exp(self.beta * x[not_mask])) / self.beta
+        
+        return result
+    
+    def _mish(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Mish activation function: x * tanh(softplus(x))
+        """
+        return x * torch.tanh(F.softplus(x))
+    
+    def _elu(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        ELU activation function: x if x > 0 else α * (exp(x) - 1)
+        Uses the alpha parameter to control the negative slope
+        """
+        return F.elu(x, alpha=self.alpha)
+    
+    def _tanh_shrink(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        TanhShrink activation function: x - tanh(x)
+        """
+        return x - torch.tanh(x)
+
+
+class WaveletBasis(BaseBasis):
+    def __init__(self, order: int):
+        self.order = order
+
+    def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
+        batch_size, input_dim = x.shape
+        wavelet_basis = torch.zeros(batch_size, input_dim, self.order, device=x.device)
+        for i in range(self.order):
+            wavelet_basis[..., i] = self.haar_wavelet(x, i)
+        return wavelet_basis
+
+    def haar_wavelet(self, x: torch.Tensor, order: int) -> torch.Tensor:
+        if order == 0:
+            return torch.ones_like(x)
+        else:
+            k = 2 ** (order - 1)
+            return torch.where((x >= 0) & (x < 1 / k), 1, -1)
+
+
+class FourierBasis(BaseBasis):
+    def __init__(self, order: int):
+        self.order = order
+
+    def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
+        x_scaled = torch.clamp((x + 1), -1, 1) * torch.pi
+        result = torch.zeros(*x.shape, 2 * self.order + 1, device=x.device)
+        result[..., 0] = 1.0
+        for k in range(1, self.order + 1):
+            result[..., k] = torch.cos(k * x_scaled)
+            result[..., k + self.order] = torch.sin(k * x_scaled)
+        return result
