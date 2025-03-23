@@ -9,21 +9,12 @@ RUN mkdir -p /workspace/src
 # Copy requirements file
 COPY requirements.txt /workspace/
 
-# Install Python and system packages
+# Install Python and essential system packages only
 RUN apt-get update && apt-get install -y \
     python3-full \
     python3-pip \
-    python3-dev \
-    python3-numpy \
-    python3-pandas \
-    python3-matplotlib \
+    python3-venv \
     && rm -rf /var/lib/apt/lists/*
-
-# Install PyTorch and other ML packages first
-RUN pip3 install --break-system-packages torch torchvision torchaudio
-
-# Install additional Python packages
-RUN pip3 install --break-system-packages --no-cache-dir -r requirements.txt
 
 # Set environment variables
 ENV PYTHONPATH="/workspace:/workspace/src"

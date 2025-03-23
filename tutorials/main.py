@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.datasets import make_regression
 from src.basis.locals import *
-from src.nn.layers import KANLayer
+from src.nn.layers import MatrixKANLayer
 
 # Generate input tensor: 1000 samples, 10 features
 X_train = torch.rand(1000, 10)
@@ -14,7 +14,7 @@ y_train = torch.rand(1000, 1)
 # Define the KANLayer
 input_dim = 10
 output_dim = 1
-kan_layer = KANLayer(input_dim, output_dim)
+kan_layer = MatrixKANLayer(input_dim, output_dim)
 
 # Define loss function and optimizer
 criterion = nn.MSELoss()

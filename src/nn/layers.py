@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from src.basis.locals import *
+from src.basis.locals import BSplineBasis
 
 
 """
@@ -18,7 +18,7 @@ class MatrixKANLayer(nn.Module):
         self.grid_epsilon = grid_epsilon
 
         # Precompute basis matrix for the given spline degree
-        self.register_buffer('basis_matrix', binomial_coefficients_matrix(spline_degree))
+        self.register_buffer('basis_matrix', BSplineBasis._binomial_coefficients_matrix(spline_degree))
 
         # Learnable polynomial coefficients with grid size dimension
         self.poly_matrix = nn.Parameter(torch.zeros(input_dim, output_dim, grid_size, spline_degree + 1))
@@ -55,7 +55,7 @@ class MatrixKANLayer(nn.Module):
         flat_coeffs = self.poly_matrix[flat_input_indices, :, flat_indices, :]
         
         # Reshape back to original dimensions
-        # Shape: [batch_size, input_dim, output_dim, spline_degree+1]
+        # Shape: [batch_size, self.input_dim, self.output_dim, self.spline_degree + 1]
         gathered_coeffs = flat_coeffs.reshape(batch_size, self.input_dim, self.output_dim, self.spline_degree + 1)
         
         # Expand basis values for broadcasting
@@ -71,4 +71,4 @@ class MatrixKANLayer(nn.Module):
         output = weighted_basis.sum(dim=1)
         
         return output
-    
+

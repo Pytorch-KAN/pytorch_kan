@@ -118,3 +118,7 @@ celerybeat-schedule
 ./notebooks/
 ./output/
 pytorch_KAN/dump/
+
+kan_venv/
+data/
+output/

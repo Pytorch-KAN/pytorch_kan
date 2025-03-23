@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from functools import lru_cache
-from src.src.pytorch_kan.basis.base import BaseBasis
+from src.basis.base import BaseBasis
 
 class BSplineBasis(BaseBasis):
     def __init__(self, order: int, degree: int, knots: torch.Tensor):
@@ -35,7 +35,7 @@ class BSplineBasis(BaseBasis):
         return torch.inverse(basis_matrix)
 
     @staticmethod
-    def _cox_de_boor_matrix(x, i, k, knots):
+    def cox_de_boor_basis(x, i, k, knots):
         if k == 0:
             return 1.0 if knots[i] <= x < knots[i+1] else 0.0
         d1 = knots[i+k] - knots[i]
@@ -81,10 +81,10 @@ class RBFBasis(BaseBasis):
         self.sigma = sigma
 
     def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
-        return self._rbf_basis(x, self.centers, self.sigma)
+        return self.rbf_basis(x, self.centers, self.sigma)
 
     @staticmethod
-    def _rbf_basis(x, centers, sigma):
+    def rbf_basis(x, centers, sigma):
         batch_size, input_dim = x.shape
         num_rbf_bases = len(centers)
         rbf_values = torch.zeros(batch_size, input_dim, num_rbf_bases, device=x.device)
