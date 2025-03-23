@@ -5,3 +5,9 @@ transformers
 datasets
 scipy
 scikit-learn
+numpy
+pandas
+matplotlib
+seaborn
+jupyter
+notebook
