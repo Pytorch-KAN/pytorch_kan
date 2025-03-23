@@ -9,17 +9,25 @@ RUN mkdir -p /workspace/src
 # Copy requirements file
 COPY requirements.txt /workspace/
 
-# Install Python and create virtual environment
-RUN apt-get update && apt-get install -y python3 python3-pip python3-venv && \
-    python3 -m venv /workspace/venv && \
-    . /workspace/venv/bin/activate && \
-    pip install --no-cache-dir -r requirements.txt
+# Install Python and system packages
+RUN apt-get update && apt-get install -y \
+    python3-full \
+    python3-pip \
+    python3-dev \
+    python3-numpy \
+    python3-pandas \
+    python3-matplotlib \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set environment variable to use the virtual environment
-ENV PATH="/workspace/venv/bin:$PATH"
-ENV PYTHONPATH="/workspace/src:$PYTHONPATH"
+# Install PyTorch and other ML packages first
+RUN pip3 install --break-system-packages torch torchvision torchaudio
 
-# We don't copy any code here - it will be mounted from host
+# Install additional Python packages
+RUN pip3 install --break-system-packages --no-cache-dir -r requirements.txt
 
-# Command to run the application (adjust as needed)
-CMD ["python3", "/workspace/src/main.py"]
+# Set environment variables
+ENV PYTHONPATH="/workspace:/workspace/src"
+
+# Set default shell to bash
+SHELL ["/bin/bash", "-c"]
+ENTRYPOINT ["/bin/bash"]

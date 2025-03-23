@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from src.pytorch_kan.basis.locals import *
+from src.basis.locals import *
 
 
 """

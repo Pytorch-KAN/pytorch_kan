@@ -13,10 +13,18 @@ build-no-cache:
 # Run the container with volume
 container:
 	docker run -it --rm --name pytorch-kan --gpus all \
-	-v /home/fabio/Documents/GitHub/Pytorch_KAN/pytorch_kan:/workspace \
-	-e PYTHONPATH="/workspace:$$PYTHONPATH" \
+	-v $(WORKSPACE_DIR):/workspace \
+	-v vscode-server:/root/.vscode-server \
+	-e PYTHONPATH=/workspace \
+	-e PYTHONUNBUFFERED=1 \
+	--network host \
 	--ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
-	pytorch-kan bash
+	--privileged \
+	$(IMAGE_NAME)
+
+# Add vscode-server volume
+vscode-volume:
+	docker volume create vscode-server
 
 # Remove the image
 remove-image:
@@ -27,4 +35,4 @@ clean:
 	docker container prune -f
 	docker image prune -f
 
-.PHONY: build container build-run remove-image clean
+.PHONY: build container build-run remove-image clean vscode-volume

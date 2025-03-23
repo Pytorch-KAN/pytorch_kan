@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from src.pytorch_kan.basis.base import BaseBasis
+from src.basis.base import BaseBasis
 
 
 class OrthogonalPolynomial(BaseBasis):
