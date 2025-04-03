@@ -8,6 +8,28 @@ Methods and Classes for creating the basis of Kolmogorov-Arnold Networks from th
 
 This module provides a collection of basis functions for Kolmogorov-Arnold Networks (KANs). These functions form the mathematical foundation of KANs, allowing them to approximate a wide range of complex functions according to the Kolmogorov-Arnold representation theorem.
 
+## Control Types
+
+### Global Control Basis (`globals.py`)
+Global control basis functions apply transformations across the entire input domain. These basis functions provide a broader approximation capability and are useful for capturing overall patterns in the data.
+
+```python
+from pytorch_kan.basis.globals import GlobalBasisFunction
+
+# Example of using a global basis function
+global_basis = GlobalBasisFunction(parameters)
+```
+
+### Local Control Basis (`locals.py`)
+Local control basis functions focus on specific regions of the input domain, allowing for more detailed approximation in those areas. They are particularly useful for capturing fine details or handling discontinuities.
+
+```python
+from pytorch_kan.basis.locals import LocalBasisFunction
+
+# Example of using a local basis function
+local_basis = LocalBasisFunction(parameters)
+```
+
 ## Available Basis Functions
 
 ### Chebyshev Polynomials
