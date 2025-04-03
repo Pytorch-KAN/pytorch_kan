@@ -8,22 +8,62 @@ packages = [{ include = "pytorch_kan", from = "src" }]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.12"
-torch = ">=2.6.0,<3.0.0"
-torchvision = ">=0.21.0,<0.22.0"
-torchaudio = ">=2.6.0,<3.0.0"
-numpy = ">=2.2.4,<3.0.0"
-pandas = ">=2.2.3,<3.0.0"
-matplotlib = ">=3.10.1,<4.0.0"
-transformers = ">=4.50.3,<5.0.0"
-datasets = ">=3.5.0,<4.0.0"
-scipy = ">=1.15.2,<2.0.0"
-scikit-learn = ">=1.6.1,<2.0.0"
-jupyter = ">=1.1.1,<2.0.0"
-notebook = ">=7.3.3,<8.0.0"
-seaborn = ">=0.13.2,<0.14.0"
-plotly = ">=6.0.1,<7.0.0"
+python = ">=3.8"  # Lowered minimum Python version for wider compatibility
+torch = ">=2.0.0,<3.0.0"  # Widened torch version range
+torchvision = ">=0.15.0,<0.22.0"  # Widened torchvision version range
+torchaudio = ">=2.0.0,<3.0.0"  # Widened torchaudio version range
+numpy = ">=1.24.0,<3.0.0"  # Widened numpy version range
+pandas = ">=1.5.0,<3.0.0"  # Widened pandas version range
+matplotlib = ">=3.6.0,<4.0.0"  # Widened matplotlib version range
+transformers = { version = ">=4.30.0,<5.0.0", optional = true }  # Made optional
+datasets = { version = ">=2.10.0,<4.0.0", optional = true }  # Made optional
+scipy = ">=1.10.0,<2.0.0"  # Widened scipy version range
+scikit-learn = ">=1.2.0,<2.0.0"  # Widened scikit-learn version range
+jupyter = { version = ">=1.0.0,<2.0.0", optional = true }  # Made optional
+notebook = { version = ">=6.5.0,<8.0.0", optional = true }  # Made optional
+seaborn = { version = ">=0.12.0,<0.14.0", optional = true }  # Made optional
+plotly = { version = ">=5.13.0,<7.0.0", optional = true }  # Made optional
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=7.0.0"
+pytest-cov = ">=4.0.0"
+hypothesis = ">=6.0.0"
+black = ">=23.0.0"
+isort = ">=5.10.0"
+flake8 = ">=6.0.0"
+flake8-docstrings = ">=1.6.0"
+mypy = ">=1.0.0"
+tox = ">=4.0.0"
+tox-poetry = ">=0.4.0"
+sphinx = ">=6.0.0"
+sphinx-rtd-theme = ">=1.2.0"
+myst-parser = ">=1.0.0"
+
+[tool.poetry.extras]
+visualization = ["matplotlib", "seaborn", "plotly"]
+notebook = ["jupyter", "notebook"]
+transformers = ["transformers", "datasets"]
+all = ["matplotlib", "seaborn", "plotly", "jupyter", "notebook", "transformers", "datasets"]
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
