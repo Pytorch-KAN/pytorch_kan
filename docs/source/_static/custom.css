@@ -1,0 +1,73 @@
+/* Custom styles for PyTorch KAN documentation */
+
+/* Make code blocks have a light background with proper contrast */
+.highlight {
+    background: #f5f5f5;
+    border-radius: 3px;
+}
+
+/* Improve appearance of class and function signatures */
+.sig {
+    background-color: #f0f8ff;
+    border-radius: 5px;
+    padding: 8px;
+    margin-bottom: 12px;
+}
+
+/* Make parameter names stand out in function signatures */
+.sig-param {
+    font-weight: 500;
+}
+
+/* Improve math formula appearance */
+.math {
+    font-size: 1.05em;
+    overflow-x: auto;
+}
+
+/* Better appearance for notes and warnings */
+.admonition {
+    border-radius: 5px;
+    margin: 20px 0;
+}
+
+/* Improve appearance of code examples */
+pre {
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 12px 15px;
+}
+
+/* Improve appearance of tables */
+table.docutils {
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin: 15px 0;
+}
+
+/* Better table headers */
+table.docutils th {
+    background-color: #e8eef7;
+    padding: 8px;
+}
+
+/* Highlight current section in navigation */
+.wy-menu-vertical li.current {
+    background-color: #f0f8ff;
+}
+
+/* Improve appearance of search box */
+.wy-side-nav-search input[type="text"] {
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* Improve hyperlink appearance */
+a {
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+    text-decoration: underline;
+}
