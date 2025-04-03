@@ -13,9 +13,21 @@ pip install pytorch-kan
 For the latest development version, you can install directly from the GitHub repository:
 
 ```bash
-git clone https://github.com/username/pytorch_kan.git
+git clone https://github.com/your-username/pytorch_kan.git
 cd pytorch_kan
 pip install -e .
+```
+
+## Using Poetry
+
+If you prefer to use Poetry for dependency management:
+
+```bash
+# Install Poetry if you don't have it
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Install the package
+poetry add pytorch-kan
 ```
 
 ## Dependencies
@@ -50,4 +62,17 @@ pip install pytorch-kan[transformers]
 
 # For all optional dependencies
 pip install pytorch-kan[all]
+```
+
+## Development Installation
+
+If you want to contribute to PyTorch KAN, install the development dependencies:
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/pytorch_kan.git
+cd pytorch_kan
+
+# Install with development dependencies using Poetry
+poetry install --with dev
 ```
