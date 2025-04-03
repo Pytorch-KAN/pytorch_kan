@@ -33,7 +33,22 @@ container:
 	--privileged \
 	$(IMAGE_NAME)
 
-# Setup virtual environment inside container
+# Local development with Poetry
+poetry-install:
+	poetry install
+
+poetry-update:
+	poetry update
+
+# Generate requirements.txt from Poetry for environments that don't use Poetry
+export-requirements:
+	poetry export -f requirements.txt --output requirements.txt
+
+# Run in Poetry environment
+poetry-run:
+	poetry run python tutorials/main.py
+
+# Setup virtual environment inside container (legacy, using poetry inside container is preferred)
 setup-venv:
 	python3 -m venv /workspace/venv && \
 	. /workspace/venv/bin/activate && \
@@ -51,12 +66,12 @@ clean-images:
 	docker image prune -f
 	docker rmi $(IMAGE_NAME)
 
-# Create virtual environment
+# Create virtual environment (legacy, use poetry-install instead)
 venv:
 	$(PYTHON) -m venv $(VENV_NAME)
 	@echo "Virtual environment created. Activate with 'source $(VENV_NAME)/bin/activate'"
 
-# Install required packages in the virtual environment
+# Install required packages in the virtual environment (legacy, use poetry-install instead)
 requirements: venv
 	. ./$(VENV_NAME)/bin/activate && $(VENV_NAME)/bin/pip install -r requirements.txt
 	@echo "Requirements installed in virtual environment"
@@ -66,7 +81,7 @@ clean-venv:
 	rm -rf $(VENV_NAME)
 	@echo "Virtual environment removed"
 
-# Run main.py with the virtual environment
+# Run main.py with the virtual environment (legacy, use poetry-run instead)
 run:
 	. ./$(VENV_NAME)/bin/activate && $(VENV_NAME)/bin/python tutorials/main.py
 
@@ -77,6 +92,10 @@ help:
 	@echo "  make build        - Build Docker image"
 	@echo "  make build-no-cache - Build Docker image without cache"
 	@echo "  make container    - Run container with GPU support"
+	@echo "  make poetry-install - Install dependencies using Poetry"
+	@echo "  make poetry-update - Update dependencies using Poetry"
+	@echo "  make poetry-run   - Run main.py using Poetry"
+	@echo "  make export-requirements - Generate requirements.txt from Poetry dependencies"
 	@echo "  make clean        - Clean up all resources"
 
-.PHONY: setup build build-no-cache container clean clean-containers clean-images setup-venv venv requirements clean-venv run help
+.PHONY: setup build build-no-cache container clean clean-containers clean-images setup-venv venv requirements clean-venv run poetry-install poetry-update poetry-run export-requirements help

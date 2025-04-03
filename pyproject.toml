@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "pytorch-kan"
+version = "0.1.0"
+description = "Efficient and scalable implementation of Kolmogorov-Arnold Networks"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{ include = "pytorch_kan", from = "src" }]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.12"
+torch = ">=2.6.0,<3.0.0"
+torchvision = ">=0.21.0,<0.22.0"
+torchaudio = ">=2.6.0,<3.0.0"
+numpy = ">=2.2.4,<3.0.0"
+pandas = ">=2.2.3,<3.0.0"
+matplotlib = ">=3.10.1,<4.0.0"
+transformers = ">=4.50.3,<5.0.0"
+datasets = ">=3.5.0,<4.0.0"
+scipy = ">=1.15.2,<2.0.0"
+scikit-learn = ">=1.6.1,<2.0.0"
+jupyter = ">=1.1.1,<2.0.0"
+notebook = ">=7.3.3,<8.0.0"
+seaborn = ">=0.13.2,<0.14.0"
+plotly = ">=6.0.1,<7.0.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
