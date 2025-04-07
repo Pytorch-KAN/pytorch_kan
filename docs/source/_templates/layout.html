@@ -1,0 +1,44 @@
+{% extends "!layout.html" %}
+
+{% block extrahead %}
+{{ super() }}
+<link rel="icon" type="image/png" href="{{ pathto('_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png', 1) }}">
+<meta name="theme-color" content="#FF5500">
+{% endblock %}
+
+{% block sidebartitle %}
+<a href="{{ pathto(master_doc) }}" class="logo-only-link">
+  <img src="{{ pathto('_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png', 1) }}" class="logo-large" alt="PyTorch KAN Logo">
+</a>
+
+{% include "searchbox.html" %}
+{% endblock %}
+
+{% block footer %}
+<div class="footer">
+  {% if show_copyright %}
+    {% if hasdoc('copyright') %}
+      {% trans path=pathto('copyright'), copyright=copyright|e %}
+        <a href="{{ path }}">{{ copyright }}</a>
+      {% endtrans %}
+    {% else %}
+      {{ copyright }}
+    {% endif %}
+  {% endif %}
+
+  {% if show_sphinx %}
+    {% if show_copyright %}| {% endif %}
+    {% trans sphinx_version=sphinx_version|e %}
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.
+    {% endtrans %}
+  {% endif %}
+
+  <div class="footer-links">
+    <a href="https://github.com/username/pytorch_kan" target="_blank" rel="noopener noreferrer">GitHub</a>
+    <span>|</span>
+    <a href="{{ pathto('contributing') }}">Contributing</a>
+    <span>|</span>
+    <a href="{{ pathto('changelog') }}">Changelog</a>
+  </div>
+</div>
+{% endblock %}

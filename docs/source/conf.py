@@ -11,6 +11,8 @@ from datetime import datetime
 
 # Add the project root directory to the path so that Sphinx can find the modules
 sys.path.insert(0, os.path.abspath('../..'))
+# Also explicitly add the src directory
+sys.path.insert(0, os.path.abspath('../../src'))
 
 # -- Project information -----------------------------------------------------
 project = 'PyTorch KAN'
@@ -48,6 +50,9 @@ autodoc_default_options = {
     'special-members': '__init__',  # Include __init__ method
 }
 
+# Mock imports for modules that cannot be imported during doc generation
+autodoc_mock_imports = ['src', 'src.basis', 'src.nn']
+
 # Napoleon settings for parsing docstrings
 napoleon_google_docstring = True   # Parse Google-style docstrings
 napoleon_numpy_docstring = True    # Parse NumPy-style docstrings
@@ -78,6 +83,27 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'sphinx_rtd_theme'  # Use the Read the Docs theme
 html_static_path = ['_static']
+html_favicon = '_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png'
+html_logo = '_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png'
+html_theme_options = {
+    'logo_only': True,  # Only show the logo in the sidebar
+    'prev_next_buttons_location': 'bottom',
+    'style_external_links': True,
+    'style_nav_header_background': '#4d132f',  # Updated to match your CSS --kan-secondary color
+    'collapse_navigation': False,
+    'sticky_navigation': True,
+    'navigation_depth': 4,
+    'includehidden': True,
+    'titles_only': False
+}
+
+# Custom CSS/JS files
+html_css_files = [
+    'custom.css',
+]
+
+# Path to custom templates
+templates_path = ['_templates']
 
 # -- Options for LaTeX output ------------------------------------------------
 latex_elements = {

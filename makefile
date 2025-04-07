@@ -1,9 +1,19 @@
+# Makefile for PyTorch KAN project
+
 # Variables
 IMAGE_NAME = pytorch-kan
 CONTAINER_NAME = pytorch-kan
 WORKSPACE_DIR = $(shell pwd)
 VENV_NAME = kan_venv
 PYTHON = python3
+POETRY = poetry
+SPHINX_BUILD = $(POETRY) run sphinx-build
+SPHINX_AUTOBUILD = $(POETRY) run sphinx-autobuild
+
+# Main targets
+.PHONY: all clean docs docs-clean docs-live test lint type setup build build-no-cache container clean-containers clean-images setup-venv venv requirements clean-venv run poetry-install poetry-update poetry-run export-requirements help
+
+all: test lint type docs
 
 # Step 1: Create required volumes
 setup:
@@ -33,29 +43,53 @@ container:
 	--privileged \
 	$(IMAGE_NAME)
 
-# Local development with Poetry
-poetry-install:
-	poetry install
+# Documentation targets
+docs: 
+	@echo "Building Sphinx documentation..."
+	$(SPHINX_BUILD) -b html docs/source docs/build/html
+	@echo "Documentation built successfully. Open docs/build/html/index.html in your browser."
 
-poetry-update:
-	poetry update
+docs-clean:
+	@echo "Cleaning documentation build..."
+	rm -rf docs/build
+	@echo "Documentation build cleaned."
 
-# Generate requirements.txt from Poetry for environments that don't use Poetry
-export-requirements:
-	poetry export -f requirements.txt --output requirements.txt
+docs-live:
+	@echo "Starting live preview of documentation..."
+	$(SPHINX_AUTOBUILD) docs/source docs/build/html --open-browser
 
-# Run in Poetry environment
-poetry-run:
-	poetry run python tutorials/main.py
+# Testing and quality targets
+test:
+	$(POETRY) run pytest tests
 
-# Setup virtual environment inside container (legacy, using poetry inside container is preferred)
-setup-venv:
-	python3 -m venv /workspace/venv && \
-	. /workspace/venv/bin/activate && \
-	pip install --no-cache-dir -r requirements.txt
+lint:
+	$(POETRY) run black src tests
+	$(POETRY) run isort src tests
+	$(POETRY) run flake8 src tests
 
-# Optional: Clean up resources when done
-clean: clean-containers clean-images
+type:
+	$(POETRY) run mypy src
+
+# Project installation and setup
+install:
+	$(POETRY) install
+
+dev-install:
+	$(POETRY) install --with dev
+
+update:
+	$(POETRY) update
+
+# Generate requirements.txt from Poetry dependencies
+requirements:
+	$(POETRY) export -f requirements.txt --output requirements.txt
+
+# Clean up
+clean: docs-clean clean-containers clean-images
+	rm -rf __pycache__ .pytest_cache .mypy_cache
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+	find . -type d -name "*.egg-info" -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
 
 clean-containers:
 	@echo "Cleaning up containers..."
@@ -85,17 +119,22 @@ clean-venv:
 run:
 	. ./$(VENV_NAME)/bin/activate && $(VENV_NAME)/bin/python tutorials/main.py
 
-# Display usage help
+# Help
 help:
-	@echo "Usage:"
-	@echo "  make setup         - Create required Docker volumes"
-	@echo "  make build        - Build Docker image"
-	@echo "  make build-no-cache - Build Docker image without cache"
-	@echo "  make container    - Run container with GPU support"
-	@echo "  make poetry-install - Install dependencies using Poetry"
-	@echo "  make poetry-update - Update dependencies using Poetry"
-	@echo "  make poetry-run   - Run main.py using Poetry"
-	@echo "  make export-requirements - Generate requirements.txt from Poetry dependencies"
-	@echo "  make clean        - Clean up all resources"
-
-.PHONY: setup build build-no-cache container clean clean-containers clean-images setup-venv venv requirements clean-venv run poetry-install poetry-update poetry-run export-requirements help
+	@echo "Available targets:"
+	@echo "  all            - Run tests, linting, type checking, and build docs"
+	@echo "  setup          - Create required Docker volumes"
+	@echo "  build          - Build Docker image"
+	@echo "  build-no-cache - Build Docker image without cache"
+	@echo "  container      - Run container with GPU support"
+	@echo "  docs           - Build Sphinx documentation"
+	@echo "  docs-clean     - Clean documentation build"
+	@echo "  docs-live      - Start live preview of documentation"
+	@echo "  test           - Run tests"
+	@echo "  lint           - Run code style checks"
+	@echo "  type           - Run type checking"
+	@echo "  install        - Install dependencies using Poetry"
+	@echo "  dev-install    - Install development dependencies using Poetry"
+	@echo "  update         - Update dependencies using Poetry"
+	@echo "  requirements   - Generate requirements.txt from Poetry"
+	@echo "  clean          - Clean build artifacts and cache files"

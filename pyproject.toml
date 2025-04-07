@@ -8,7 +8,7 @@ packages = [{ include = "pytorch_kan", from = "src" }]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.8"  # Lowered minimum Python version for wider compatibility
+python = ">=3.8.1"  # Updated minimum Python version for compatibility with flake8
 torch = ">=2.0.0,<3.0.0"  # Widened torch version range
 torchvision = ">=0.15.0,<0.22.0"  # Widened torchvision version range
 torchaudio = ">=2.0.0,<3.0.0"  # Widened torchaudio version range

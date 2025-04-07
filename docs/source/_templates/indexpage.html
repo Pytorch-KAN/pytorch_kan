@@ -1,0 +1,35 @@
+{% extends "!page.html" %}
+
+{% block body %}
+<div class="pytorch-kan-header">
+  <div style="display: flex; align-items: center; margin-bottom: 20px;">
+    <img src="{{ pathto('_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png', 1) }}" alt="PyTorch KAN Logo" style="height: 80px; margin-right: 20px;">
+    <h1>PyTorch KAN: Kolmogorov-Arnold Networks</h1>
+  </div>
+  <p>A PyTorch implementation of Kolmogorov-Arnold Networks (KAN) - a flexible, interpretable neural network architecture based on the Kolmogorov-Arnold representation theorem.</p>
+  
+  <div style="margin-top: 20px;">
+    <a href="{{ pathto('installation') }}" class="btn btn-light" style="margin-right: 10px; font-weight: bold; background-color: #fff; color: #222;">Get Started</a>
+    <a href="{{ pathto('tutorials/index') }}" class="btn btn-outline-light" style="font-weight: bold; border: 1px solid #fff; color: #fff;">Tutorials</a>
+  </div>
+</div>
+
+<div class="feature-section">
+  <div class="feature-card">
+    <h3>Flexible Basis Functions</h3>
+    <p>Choose from a wide range of orthogonal polynomial families (Chebyshev, Legendre, Hermite, Laguerre) and other basis function types to find the optimal representation for your data.</p>
+  </div>
+  
+  <div class="feature-card">
+    <h3>Efficient Implementation</h3>
+    <p>Optimized PyTorch implementation with adaptive approximation capabilities, allowing for better performance with fewer parameters compared to traditional neural networks.</p>
+  </div>
+  
+  <div class="feature-card">
+    <h3>Interpretable Architecture</h3>
+    <p>Based on the Kolmogorov-Arnold theorem, KANs provide more interpretable and theoretically grounded neural networks, offering insights into the underlying function approximation.</p>
+  </div>
+</div>
+
+{{ super() }}
+{% endblock %}

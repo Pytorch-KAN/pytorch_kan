@@ -7,6 +7,7 @@ This module provides the neural network components for building Kolmogorov-Arnol
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ## KAN Layers
@@ -18,6 +19,7 @@ This module provides the neural network components for building Kolmogorov-Arnol
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ### MatrixKANLayer
@@ -27,6 +29,7 @@ This module provides the neural network components for building Kolmogorov-Arnol
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ## Models
@@ -38,6 +41,7 @@ This module provides the neural network components for building Kolmogorov-Arnol
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ## Data Scaling
@@ -49,6 +53,7 @@ This module provides the neural network components for building Kolmogorov-Arnol
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ### StandardScaler
@@ -58,6 +63,7 @@ This module provides the neural network components for building Kolmogorov-Arnol
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ### IdentityScaler
@@ -67,4 +73,5 @@ This module provides the neural network components for building Kolmogorov-Arnol
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```

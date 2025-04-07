@@ -1,73 +1,521 @@
 /* Custom styles for PyTorch KAN documentation */
 
-/* Make code blocks have a light background with proper contrast */
-.highlight {
-    background: #f5f5f5;
-    border-radius: 3px;
+:root {
+  /* Updated professional color palette that complements your logo */
+  --kan-primary: #4A6FE3;        /* Primary blue color */
+  --kan-secondary: #4d132f;      /* Deep slate for navigation */
+  --kan-accent: #8C54FF;         /* Accent purple for highlights */
+  --kan-light: #f8f9fa;          /* Light background */
+  --kan-dark: #1A202C;           /* Dark text */
+  --kan-code-bg: #f5f7f9;        /* Code background */
+  --kan-link: #4A6FE3;           /* Link color matching primary */
+  --kan-link-hover: #8C54FF;     /* Link hover color */
+  --kan-border: #e6e6e6;         /* Border color */
+  --kan-shadow: rgba(0, 0, 0, 0.05);  /* Shadow color */
+  --kan-nav-text: #FFFFFF;       /* Bright white for maximum contrast */
+  --kan-caption-text: #FFD479;   /* Warm yellow for "Contents" heading */
 }
 
-/* Improve appearance of class and function signatures */
-.sig {
-    background-color: #f0f8ff;
-    border-radius: 5px;
-    padding: 8px;
-    margin-bottom: 12px;
+/* Global styles */
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  color: var(--kan-dark);
+  line-height: 1.6;
 }
 
-/* Make parameter names stand out in function signatures */
-.sig-param {
-    font-weight: 500;
+/* Increased logo size and styling */
+.wy-side-nav-search .icon-home {
+  display: block;
+  font-size: 1em;
+  color: #ffffff;
+  margin-bottom: 0.8em;
 }
 
-/* Improve math formula appearance */
-.math {
-    font-size: 1.05em;
-    overflow-x: auto;
+.wy-side-nav-search > a img.logo {
+  /* Increased logo size */
+  width: auto;
+  height: auto;
+  max-width: 70%;
+  max-height: none;
+  margin: 0 auto;
+  padding: 10px 0;
 }
 
-/* Better appearance for notes and warnings */
-.admonition {
-    border-radius: 5px;
-    margin: 20px 0;
+/* Big Logo styling */
+.logo-only-link {
+  display: block;
+  text-align: center;
+  padding: 20px 5px;
 }
 
-/* Improve appearance of code examples */
-pre {
-    font-size: 14px;
-    line-height: 1.4;
-    padding: 12px 15px;
+.logo-large {
+  width: 90%;
+  max-width: 200px;
+  height: auto;
+  margin: 0 auto;
 }
 
-/* Improve appearance of tables */
-table.docutils {
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin: 15px 0;
+/* Hide the project name text that might appear elsewhere */
+.wy-side-nav-search .icon-home::before {
+  content: none !important;
 }
 
-/* Better table headers */
-table.docutils th {
-    background-color: #e8eef7;
-    padding: 8px;
+.wy-side-nav-search .version {
+  margin-top: 15px;
+}
+
+/* Header styling with KAN branding */
+.wy-side-nav-search {
+  background-color: var(--kan-secondary);
+}
+
+.wy-side-nav-search > a {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.3em;
+  padding: 0;
+  margin: 0;
+}
+
+/* Remove any text that might appear with logo */
+.wy-side-nav-search > a .fa,
+.wy-side-nav-search > a::before {
+  display: none;
+}
+
+/* Improve navigation appearance */
+.wy-menu-vertical {
+  background-color: var(--kan-secondary);
+}
+
+/* Special styling for caption text in navigation */
+.wy-menu-vertical p.caption {
+  color: var(--kan-caption-text);
+  font-weight: 700;
+  font-size: 1.05em;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wy-menu-vertical .caption-text {
+  color: var(--kan-caption-text);
+}
+
+/* Improved navigation text contrast - NOW WITH MAXIMUM CONTRAST */
+.wy-menu-vertical a {
+  color: var(--kan-nav-text);  /* Pure white for maximum contrast */
+  opacity: 1;  /* Full opacity for better visibility */
+  transition: background-color 0.2s ease;
+  font-weight: 600;  /* Bolder text for better visibility */
+  letter-spacing: 0.02em;  /* Slightly increased letter spacing for readability */
+}
+
+.wy-menu-vertical li.toctree-l1.current > a {
+  border-color: var(--kan-primary);
+  background-color: var(--kan-primary);
+  color: white;
+}
+
+.wy-menu-vertical li.current > a.current {
+  background-color: var(--kan-primary);
+  color: white;
+}
+
+.wy-menu-vertical a:hover {
+  background-color: rgba(255, 255, 255, 0.2);  /* More visible hover state */
+  color: white;
 }
 
 /* Highlight current section in navigation */
 .wy-menu-vertical li.current {
-    background-color: #f0f8ff;
+  background-color: rgba(255, 255, 255, 0.1);  /* Slightly lighter background for current section */
+}
+
+.wy-menu-vertical li.current > a {
+  background-color: var(--kan-primary);
+  color: white;
+  font-weight: 700;  /* Make current selection even bolder */
+}
+
+.wy-menu-vertical li.current > a:hover {
+  background-color: var(--kan-primary);
+}
+
+/* Make nested navigation more visible */
+.wy-menu-vertical li.toctree-l2 a,
+.wy-menu-vertical li.toctree-l3 a,
+.wy-menu-vertical li.toctree-l4 a {
+  color: #FFFFFF;  /* Pure white for maximum contrast */
+  font-weight: 500;  /* Slightly less bold than parent items but still bold enough */
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);  /* Text shadow for extra readability */
+}
+
+.wy-menu-vertical li.toctree-l2.current > a,
+.wy-menu-vertical li.toctree-l3.current > a,
+.wy-menu-vertical li.toctree-l4.current > a {
+  color: white;
+  background-color: rgba(74, 111, 227, 0.8);  /* Slightly transparent primary color */
+}
+
+/* Indent nested navigation items more clearly */
+.wy-menu-vertical li.toctree-l1.current > a { padding-left: 1.0em; background-color: var(--kan-primary); }
+.wy-menu-vertical li.toctree-l2.current > a { padding-left: 2.0em; }
+.wy-menu-vertical li.toctree-l3.current > a { padding-left: 3.0em; }
+.wy-menu-vertical li.toctree-l4.current > a { padding-left: 4.0em; }
+
+.wy-menu-vertical li.toctree-l1 > a { padding-left: 1.0em; }
+.wy-menu-vertical li.toctree-l2 > a { padding-left: 2.0em; }
+.wy-menu-vertical li.toctree-l3 > a { padding-left: 3.0em; }
+.wy-menu-vertical li.toctree-l4 > a { padding-left: 4.0em; }
+
+/* Updated navigation header background */
+.wy-nav-top {
+  background-color: var(--kan-secondary);
+}
+
+/* Make code blocks have a light background with proper contrast */
+.highlight {
+  background: var(--kan-code-bg);
+  border-radius: 6px;
+  border: 1px solid var(--kan-border);
+  box-shadow: 0 2px 4px var(--kan-shadow);
+  margin: 20px 0;
+}
+
+/* Copybutton styling */
+.copybutton {
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.highlight:hover .copybutton {
+  opacity: 1;
+}
+
+/* Improve appearance of class and function signatures */
+.sig {
+  background-color: #f0f8ff;
+  border-left: 3px solid var(--kan-primary);
+  border-radius: 3px;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px var(--kan-shadow);
+}
+
+/* Make parameter names stand out in function signatures */
+.sig-param {
+  font-weight: 500;
+}
+
+.sig-name {
+  color: var(--kan-primary);
+  font-weight: 600;
+}
+
+/* Improve math formula appearance */
+.math {
+  font-size: 1.05em;
+  overflow-x: auto;
+  padding: 2px 0;
+}
+
+/* Better appearance for notes and warnings */
+.admonition {
+  border-radius: 6px;
+  margin: 25px 0;
+  box-shadow: 0 2px 8px var(--kan-shadow);
+  border: none;
+  overflow: hidden;
+}
+
+.admonition-title {
+  text-transform: uppercase;
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+  padding: 12px 15px;
+}
+
+.admonition.note .admonition-title {
+  background-color: var(--kan-primary);
+}
+
+.admonition.warning .admonition-title {
+  background-color: #E53E3E;
+}
+
+.admonition.tip .admonition-title {
+  background-color: #38A169;
+}
+
+/* Improve appearance of code examples */
+pre {
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 15px 18px;
+  border-radius: 6px;
+  border: 1px solid var(--kan-border);
+}
+
+code {
+  font-family: 'Source Code Pro', 'Consolas', 'Monaco', 'Menlo', monospace;
+  font-size: 90%;
+  background-color: #f0f0f0;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+/* Improve appearance of tables */
+table.docutils {
+  border-radius: 6px;
+  box-shadow: 0 2px 5px var(--kan-shadow);
+  margin: 20px 0;
+  border: 1px solid var(--kan-border);
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+/* Better table headers */
+table.docutils th {
+  background-color: #e8eef7;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--kan-border);
+}
+
+table.docutils td {
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--kan-border);
+}
+
+table.docutils tr:last-child td {
+  border-bottom: none;
 }
 
 /* Improve appearance of search box */
 .wy-side-nav-search input[type="text"] {
-    border-radius: 5px;
-    border: 1px solid #ccc;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 10px 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 /* Improve hyperlink appearance */
 a {
-    text-decoration: none;
-    transition: color 0.2s ease-in-out;
+  color: var(--kan-link);
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 a:hover {
-    text-decoration: underline;
+  color: var(--kan-link-hover);
+  text-decoration: underline;
+}
+
+/* Button styling */
+.btn {
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-neutral {
+  background-color: var(--kan-light) !important;
+  color: var(--kan-dark) !important;
+  border: 1px solid var(--kan-border);
+}
+
+.btn-neutral:hover {
+  background-color: #fff !important;
+  box-shadow: 0 2px 5px var(--kan-shadow);
+}
+
+/* Footer styles */
+footer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--kan-border);
+}
+
+/* Responsive improvements */
+@media screen and (max-width: 768px) {
+  .wy-nav-content {
+    padding: 1.5em;
+  }
+  
+  pre {
+    font-size: 13px;
+    padding: 12px;
+  }
+  
+  .admonition {
+    margin: 20px 0;
+  }
+  
+  /* Ensure logo is still visible on mobile */
+  .wy-nav-top img {
+    max-width: 50px;
+    height: auto;
+  }
+}
+
+/* PyTorch KAN branded header - updated color scheme */
+.pytorch-kan-header {
+  background: linear-gradient(135deg, var(--kan-secondary) 0%, var(--kan-dark) 100%);
+  color: white;
+  padding: 3rem 2rem;
+  margin-bottom: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.pytorch-kan-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.pytorch-kan-header p {
+  font-size: 1.1rem;
+  max-width: 650px;
+  opacity: 0.9;
+}
+
+/* Feature section for homepage */
+.feature-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 40px 0;
+}
+
+.feature-card {
+  flex: 1 1 300px;
+  padding: 25px;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 10px var(--kan-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px var(--kan-shadow);
+}
+
+.feature-card h3 {
+  color: var(--kan-primary);
+  font-size: 1.3rem;
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.feature-card p {
+  color: #666;
+  line-height: 1.5;
+}
+
+/* Custom badge styling with updated colors */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 8px;
+}
+
+.badge-api {
+  background-color: var(--kan-primary);
+  color: white;
+}
+
+.badge-tutorial {
+  background-color: var(--kan-accent);
+  color: white;
+}
+
+.badge-theory {
+  background-color: #7f58d1;
+  color: white;
+}
+
+/* Code output styling */
+.output-area {
+  background-color: #f8f9fa;
+  border: 1px solid #eaecef;
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: -20px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.output-area::before {
+  content: "Output";
+  position: absolute;
+  top: -10px;
+  left: 15px;
+  background-color: var(--kan-secondary);
+  color: white;
+  padding: 0 8px;
+  font-size: 12px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* Example cards */
+.example-card {
+  border: 1px solid var(--kan-border);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 30px 0;
+  background-color: white;
+  box-shadow: 0 2px 8px var(--kan-shadow);
+}
+
+.example-card h4 {
+  margin-top: 0;
+  border-bottom: 2px solid var(--kan-primary);
+  padding-bottom: 10px;
+  display: inline-block;
+}
+
+/* Equation numbering */
+.math.numbered {
+  position: relative;
+  padding-right: 40px;
+}
+
+.math.numbered::after {
+  content: attr(data-number);
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Print optimization */
+@media print {
+  .wy-nav-side {
+    display: none;
+  }
+  
+  .wy-nav-content-wrap {
+    margin-left: 0;
+  }
+  
+  .wy-breadcrumbs {
+    display: none;
+  }
 }

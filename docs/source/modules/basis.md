@@ -7,6 +7,7 @@ This module provides implementations of various basis functions used in Kolmogor
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ## Base Basis Class
@@ -18,6 +19,7 @@ The base class that all basis functions inherit from:
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ## Orthogonal Polynomial Basis Functions
@@ -29,6 +31,7 @@ The base class that all basis functions inherit from:
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ### Chebyshev Second Kind
@@ -38,6 +41,7 @@ The base class that all basis functions inherit from:
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ### Legendre
@@ -47,6 +51,7 @@ The base class that all basis functions inherit from:
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ### Gegenbauer
@@ -56,6 +61,7 @@ The base class that all basis functions inherit from:
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ### Hermite
@@ -65,6 +71,7 @@ The base class that all basis functions inherit from:
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ### Laguerre
@@ -74,6 +81,7 @@ The base class that all basis functions inherit from:
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ### Jacobi
@@ -83,4 +91,5 @@ The base class that all basis functions inherit from:
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```

@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from functools import lru_cache
-from src.basis.base import BaseBasis
+from pytorch_kan.basis.base import BaseBasis
 
 class BSplineBasis(BaseBasis):
     """
