@@ -31,6 +31,10 @@ extensions = [
     'myst_parser',             # Support for Markdown files
     'sphinx_copybutton',       # Add copy buttons to code blocks
     'nbsphinx',                # Include Jupyter notebooks
+    'sphinx_design',           # Advanced layout components
+    'sphinx_togglebutton',     # Toggle content visibility
+    'sphinx_tabs.tabs',        # Tabbed content
+    'sphinx_autodoc_typehints',# Better type hints
 ]
 
 # Mappings for intersphinx to link to external documentation
@@ -81,25 +85,47 @@ master_doc = 'index'
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # -- Options for HTML output -------------------------------------------------
-html_theme = 'sphinx_rtd_theme'  # Use the Read the Docs theme
+html_theme = 'sphinx_book_theme'  # Use the modern Sphinx Book Theme
 html_static_path = ['_static']
-html_favicon = '_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png'
-html_logo = '_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png'
+html_favicon = '_static/images/icon.svg'
+html_logo = '_static/images/icon.svg'
 html_theme_options = {
-    'logo_only': True,  # Only show the logo in the sidebar
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': True,
-    'style_nav_header_background': '#4d132f',  # Updated to match your CSS --kan-secondary color
-    'collapse_navigation': False,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
-    'titles_only': False
+    # Repository settings
+    "repository_url": "https://github.com/Pytorch-KAN/pytorch_kan",
+    "repository_branch": "main",
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "use_edit_page_button": True,
+    "use_download_button": True,
+    "use_fullscreen_button": True,
+    "path_to_docs": "docs/source",
+    
+    # Navigation settings
+    "show_navbar_depth": 2,
+    "show_toc_level": 2,
+    "home_page_in_toc": True,
+    "toc_title": "On this page",
+    
+    # Announcement banner - removed as requested
+    # "announcement": "This is a modern implementation of Kolmogorov-Arnold Networks (KAN)!",
+    
+    # Theme settings
+    "use_sidenotes": True,
+    "use_download_button": True,
+    
+    # Footer content
+    "footer_start": ["copyright"],
+    "footer_end": ["sphinx-version"],
 }
 
 # Custom CSS/JS files
 html_css_files = [
     'custom.css',
+]
+
+# Add JavaScript files - prevent-flash.js loads early to prevent color flashing
+html_js_files = [
+    'prevent-flash.js',
 ]
 
 # Path to custom templates
@@ -117,3 +143,18 @@ latex_elements = {
 
 # -- Options for MathJax output ----------------------------------------------
 mathjax_path = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+
+# -- Options for sphinx-autodoc-typehints ------------------------------------
+typehints_fully_qualified = False
+typehints_document_rtype = True
+always_document_param_types = True
+
+# -- Options for sphinx-copybutton -------------------------------------------
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
+copybutton_line_continuation_character = "\\"
+copybutton_here_doc_delimiter = "EOT"
+
+# -- Options for nbsphinx ----------------------------------------------------
+nbsphinx_execute = 'never'
+nbsphinx_allow_errors = True

@@ -3,42 +3,133 @@
 {% block extrahead %}
 {{ super() }}
 <link rel="icon" type="image/png" href="{{ pathto('_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png', 1) }}">
-<meta name="theme-color" content="#FF5500">
+<meta name="theme-color" content="#4A6FE3">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="PyTorch KAN: A modern implementation of Kolmogorov-Arnold Networks for interpretable deep learning">
+<meta name="keywords" content="PyTorch, KAN, Kolmogorov-Arnold Networks, Deep Learning, Neural Networks, Interpretable AI">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 {% endblock %}
 
 {% block sidebartitle %}
-<a href="{{ pathto(master_doc) }}" class="logo-only-link">
+<a href="{{ pathto(master_doc) }}" class="logo-only-link" aria-label="Home">
   <img src="{{ pathto('_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png', 1) }}" class="logo-large" alt="PyTorch KAN Logo">
+  <div class="project-name">PyTorch KAN</div>
 </a>
 
+<div class="version-wrapper">
+  <span class="version-label">v0.1.0</span>
+  <a href="https://github.com/username/pytorch_kan/releases" class="version-link" target="_blank" rel="noopener noreferrer" aria-label="View releases">
+    <i class="fas fa-tag"></i>
+  </a>
+</div>
+
 {% include "searchbox.html" %}
+
+<div class="sidebar-links">
+  <a href="https://github.com/username/pytorch_kan" class="sidebar-link" target="_blank" rel="noopener noreferrer">
+    <i class="fab fa-github"></i> GitHub
+  </a>
+  <a href="https://pypi.org/project/pytorch-kan/" class="sidebar-link" target="_blank" rel="noopener noreferrer">
+    <i class="fas fa-box"></i> PyPI
+  </a>
+</div>
 {% endblock %}
 
 {% block footer %}
 <div class="footer">
-  {% if show_copyright %}
-    {% if hasdoc('copyright') %}
-      {% trans path=pathto('copyright'), copyright=copyright|e %}
-        <a href="{{ path }}">{{ copyright }}</a>
-      {% endtrans %}
-    {% else %}
-      {{ copyright }}
-    {% endif %}
-  {% endif %}
-
-  {% if show_sphinx %}
-    {% if show_copyright %}| {% endif %}
-    {% trans sphinx_version=sphinx_version|e %}
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.
-    {% endtrans %}
-  {% endif %}
-
-  <div class="footer-links">
-    <a href="https://github.com/username/pytorch_kan" target="_blank" rel="noopener noreferrer">GitHub</a>
-    <span>|</span>
-    <a href="{{ pathto('contributing') }}">Contributing</a>
-    <span>|</span>
-    <a href="{{ pathto('changelog') }}">Changelog</a>
+  <div class="footer-top">
+    <div class="footer-column">
+      <h4>Documentation</h4>
+      <ul>
+        <li><a href="{{ pathto('installation') }}">Installation</a></li>
+        <li><a href="{{ pathto('tutorials/index') }}">Tutorials</a></li>
+        <li><a href="{{ pathto('api/index') }}">API Reference</a></li>
+        <li><a href="{{ pathto('examples/index') }}">Examples</a></li>
+      </ul>
+    </div>
+    
+    <div class="footer-column">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="{{ pathto('contributing') }}">Contributing</a></li>
+        <li><a href="https://github.com/username/pytorch_kan/issues">Issues</a></li>
+        <li><a href="{{ pathto('changelog') }}">Changelog</a></li>
+        <li><a href="{{ pathto('license') }}">License</a></li>
+      </ul>
+    </div>
+    
+    <div class="footer-column">
+      <h4>Resources</h4>
+      <ul>
+        <li><a href="https://github.com/username/pytorch_kan" target="_blank" rel="noopener noreferrer">GitHub <i class="fas fa-external-link-alt fa-xs"></i></a></li>
+        <li><a href="https://pypi.org/project/pytorch-kan/" target="_blank" rel="noopener noreferrer">PyPI <i class="fas fa-external-link-alt fa-xs"></i></a></li>
+        <li><a href="https://pytorch.org/" target="_blank" rel="noopener noreferrer">PyTorch <i class="fas fa-external-link-alt fa-xs"></i></a></li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="footer-bottom">
+    <div class="copyright">
+      {% if show_copyright %}
+        {% if hasdoc('copyright') %}
+          {% trans path=pathto('copyright'), copyright=copyright|e %}
+            <a href="{{ path }}">{{ copyright }}</a>
+          {% endtrans %}
+        {% else %}
+          {{ copyright }}
+        {% endif %}
+      {% endif %}
+    </div>
+    
+    <div class="built-with">
+      {% if show_sphinx %}
+        {% trans sphinx_version=sphinx_version|e %}
+          Built with <a href="https://www.sphinx-doc.org/" target="_blank" rel="noopener noreferrer">Sphinx</a> {{ sphinx_version }}
+        {% endtrans %}
+      {% endif %}
+    </div>
   </div>
 </div>
+
+<script>
+  // Add smooth scrolling to all links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href');
+      const targetElement = document.querySelector(targetId);
+      if (targetElement) {
+        window.scrollTo({
+          top: targetElement.offsetTop - 100,
+          behavior: 'smooth'
+        });
+      }
+    });
+  });
+  
+  // Add active class to current page in sidebar
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.wy-menu-vertical a').forEach(link => {
+      if (link.getAttribute('href') && currentPath.includes(link.getAttribute('href'))) {
+        link.classList.add('active-link');
+      }
+    });
+  });
+
+  // Prevent color flash during navigation
+  document.addEventListener('DOMContentLoaded', function() {
+    // Apply theme colors immediately
+    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+    
+    // Preload CSS to prevent FOUC
+    const links = document.querySelectorAll('link[rel="stylesheet"]');
+    links.forEach(link => {
+      link.setAttribute('rel', 'preload');
+      link.setAttribute('as', 'style');
+      link.setAttribute('onload', "this.onload=null;this.rel='stylesheet'");
+    });
+  });
+</script>
 {% endblock %}

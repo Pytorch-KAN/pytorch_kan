@@ -2,32 +2,102 @@
 
 {% block body %}
 <div class="pytorch-kan-header">
-  <div style="display: flex; align-items: center; margin-bottom: 20px;">
-    <img src="{{ pathto('_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png', 1) }}" alt="PyTorch KAN Logo" style="height: 80px; margin-right: 20px;">
-    <h1>PyTorch KAN: Kolmogorov-Arnold Networks</h1>
-  </div>
-  <p>A PyTorch implementation of Kolmogorov-Arnold Networks (KAN) - a flexible, interpretable neural network architecture based on the Kolmogorov-Arnold representation theorem.</p>
+  <div class="header-content" style="position: relative; z-index: 2;">
+    <div style="display: flex; align-items: center; margin-bottom: 30px;">
+      <img src="{{ pathto('_static/images/a787a1b2-233d-409c-9b8b-a1b4547db3b8.png', 1) }}" alt="PyTorch KAN Logo" style="height: 100px; margin-right: 30px;">
+      <div>
+        <h1>PyTorch KAN</h1>
+        <div class="subtitle" style="font-size: 1.4rem; opacity: 0.9; margin-top: 5px;">Kolmogorov-Arnold Networks</div>
+      </div>
+    </div>
+    
+    <p>A modern, high-performance PyTorch implementation of Kolmogorov-Arnold Networks (KAN) - a flexible, interpretable neural network architecture based on the Kolmogorov-Arnold representation theorem. KANs provide enhanced interpretability, improved generalization, and efficient approximation of complex functions.</p>
+    
+    <div class="header-badges" style="margin: 25px 0;">
+      <span class="badge" style="background-color: #4A6FE3; color: white; padding: 6px 12px; border-radius: 4px; font-weight: 600; margin-right: 10px;">PyTorch</span>
+      <span class="badge" style="background-color: #8C54FF; color: white; padding: 6px 12px; border-radius: 4px; font-weight: 600; margin-right: 10px;">Deep Learning</span>
+      <span class="badge" style="background-color: #38A169; color: white; padding: 6px 12px; border-radius: 4px; font-weight: 600; margin-right: 10px;">Interpretable AI</span>
+    </div>
   
-  <div style="margin-top: 20px;">
-    <a href="{{ pathto('installation') }}" class="btn btn-light" style="margin-right: 10px; font-weight: bold; background-color: #fff; color: #222;">Get Started</a>
-    <a href="{{ pathto('tutorials/index') }}" class="btn btn-outline-light" style="font-weight: bold; border: 1px solid #fff; color: #fff;">Tutorials</a>
+    <div class="header-buttons" style="margin-top: 30px; display: flex; gap: 15px;">
+      <a href="{{ pathto('installation') }}" class="btn" style="padding: 12px 24px; font-weight: 600; background-color: #fff; color: #4A6FE3; border-radius: 6px; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;">Get Started</a>
+      <a href="{{ pathto('tutorials/index') }}" class="btn" style="padding: 12px 24px; font-weight: 600; background-color: rgba(255,255,255,0.15); color: #fff; border-radius: 6px; text-decoration: none; backdrop-filter: blur(5px); transition: all 0.3s ease;">Tutorials</a>
+      <a href="https://github.com/username/pytorch_kan" class="btn" style="padding: 12px 24px; font-weight: 600; background-color: rgba(255,255,255,0.15); color: #fff; border-radius: 6px; text-decoration: none; backdrop-filter: blur(5px); transition: all 0.3s ease;">GitHub</a>
+    </div>
   </div>
 </div>
 
 <div class="feature-section">
   <div class="feature-card">
+    <div class="feature-icon" style="font-size: 2rem; margin-bottom: 20px; color: var(--kan-primary);">📊</div>
     <h3>Flexible Basis Functions</h3>
     <p>Choose from a wide range of orthogonal polynomial families (Chebyshev, Legendre, Hermite, Laguerre) and other basis function types to find the optimal representation for your data.</p>
+    <a href="{{ pathto('basis_functions') }}" class="feature-link" style="display: inline-block; margin-top: 15px; color: var(--kan-primary); font-weight: 600; text-decoration: none;">Learn more →</a>
   </div>
   
   <div class="feature-card">
+    <div class="feature-icon" style="font-size: 2rem; margin-bottom: 20px; color: var(--kan-primary);">⚡</div>
     <h3>Efficient Implementation</h3>
     <p>Optimized PyTorch implementation with adaptive approximation capabilities, allowing for better performance with fewer parameters compared to traditional neural networks.</p>
+    <a href="{{ pathto('performance') }}" class="feature-link" style="display: inline-block; margin-top: 15px; color: var(--kan-primary); font-weight: 600; text-decoration: none;">Learn more →</a>
   </div>
   
   <div class="feature-card">
+    <div class="feature-icon" style="font-size: 2rem; margin-bottom: 20px; color: var(--kan-primary);">🔍</div>
     <h3>Interpretable Architecture</h3>
     <p>Based on the Kolmogorov-Arnold theorem, KANs provide more interpretable and theoretically grounded neural networks, offering insights into the underlying function approximation.</p>
+    <a href="{{ pathto('interpretability') }}" class="feature-link" style="display: inline-block; margin-top: 15px; color: var(--kan-primary); font-weight: 600; text-decoration: none;">Learn more →</a>
+  </div>
+</div>
+
+<div class="code-example" style="margin: 60px 0; background: linear-gradient(to bottom right, rgba(74, 111, 227, 0.05), rgba(140, 84, 255, 0.05)); border-radius: 12px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); border: 1px solid rgba(74, 111, 227, 0.1);">
+  <h2 style="margin-top: 0; margin-bottom: 20px; color: var(--kan-dark);">Quick Start Example</h2>
+  <pre style="background: linear-gradient(to bottom right, #f0f4fc, #f8f9ff); border-radius: 8px; padding: 20px; box-shadow: 0 3px 15px rgba(74, 111, 227, 0.08); border-left: 3px solid var(--kan-primary);">
+<code>import torch
+from pytorch_kan import KAN
+
+# Create a simple KAN model
+model = KAN(
+    input_size=10,
+    output_size=1,
+    hidden_layers=[32, 32],
+    basis_func='chebyshev',
+    grid_size=16
+)
+
+# Train like any PyTorch model
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+criterion = torch.nn.MSELoss()
+
+# Forward pass
+outputs = model(inputs)
+loss = criterion(outputs, targets)
+
+# Backward and optimize
+optimizer.zero_grad()
+loss.backward()
+optimizer.step()</code>
+  </pre>
+</div>
+
+<div class="testimonials" style="margin: 60px 0;">
+  <h2 style="text-align: center; margin-bottom: 40px;">Why Choose KAN?</h2>
+  
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+    <div class="testimonial-card" style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+      <div style="font-size: 1.5rem; color: var(--kan-primary); margin-bottom: 15px;">🔬 Scientific Foundation</div>
+      <p style="margin-bottom: 0;">Built on the solid mathematical foundation of the Kolmogorov-Arnold representation theorem, providing theoretical guarantees for function approximation.</p>
+    </div>
+    
+    <div class="testimonial-card" style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+      <div style="font-size: 1.5rem; color: var(--kan-primary); margin-bottom: 15px;">🧩 Modular Design</div>
+      <p style="margin-bottom: 0;">Highly customizable architecture that allows you to choose the best basis functions and network structure for your specific problem domain.</p>
+    </div>
+    
+    <div class="testimonial-card" style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+      <div style="font-size: 1.5rem; color: var(--kan-primary); margin-bottom: 15px;">📈 Performance</div>
+      <p style="margin-bottom: 0;">Achieves state-of-the-art results on various benchmarks with fewer parameters than traditional neural networks.</p>
+    </div>
   </div>
 </div>
 
