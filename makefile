@@ -124,9 +124,13 @@ run:
 
 # Poetry management
 poetry-venv:
-	@echo "Creating virtual environment for Poetry..."
-	python3 -m venv poetry_venv
-	@echo "Virtual environment created at poetry_venv"
+	@if [ ! -d "poetry_venv" ]; then \
+		echo "Creating virtual environment for Poetry..."; \
+		python3 -m venv poetry_venv; \
+		echo "Virtual environment created at poetry_venv"; \
+	else \
+		echo "Poetry virtual environment already exists at poetry_venv"; \
+	fi
 
 install-poetry: poetry-venv
 	@echo "Installing Poetry in virtual environment..."
