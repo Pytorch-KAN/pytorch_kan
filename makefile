@@ -11,7 +11,7 @@ SPHINX_BUILD = $(POETRY) run sphinx-build
 SPHINX_AUTOBUILD = $(POETRY) run sphinx-autobuild
 
 # Main targets
-.PHONY: all clean docs docs-clean docs-live test lint type setup build build-no-cache container clean-containers clean-images setup-venv venv requirements clean-venv run poetry-install poetry-update poetry-run export-requirements help
+.PHONY: all clean docs docs-clean docs-live test lint type setup build build-no-cache container clean-containers clean-images setup-venv venv requirements clean-venv run poetry-install poetry-update poetry-run export-requirements help build-dist clean-dist upload-test upload
 
 all: test lint type docs
 
@@ -35,9 +35,11 @@ container:
 	docker run -it --rm --name pytorch-kan --gpus all \
 	-v $(WORKSPACE_DIR):/workspace \
 	-v vscode-server:/root/.vscode-server \
-	-v pytorch-venv:/workspace/venv \
-	-e PYTHONPATH=/workspace \
+	-v poetry-cache:/root/.cache/pypoetry \
+	-v poetry-config:/root/.config/pypoetry \
+	-e PYTHONPATH=/workspace:/workspace/src \
 	-e PYTHONUNBUFFERED=1 \
+	-e POETRY_VIRTUALENVS_IN_PROJECT=true \
 	--network host \
 	--ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
 	--privileged \
@@ -85,11 +87,12 @@ requirements:
 	$(POETRY) export -f requirements.txt --output requirements.txt
 
 # Clean up
-clean: docs-clean clean-containers clean-images
+clean: clean-dist clean-containers clean-images
 	rm -rf __pycache__ .pytest_cache .mypy_cache
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
+	@echo "Cleanup completed"
 
 clean-containers:
 	@echo "Cleaning up containers..."
@@ -119,6 +122,55 @@ clean-venv:
 run:
 	. ./$(VENV_NAME)/bin/activate && $(VENV_NAME)/bin/python tutorials/main.py
 
+# Poetry management
+poetry-install:
+	@echo "Installing dependencies with Poetry..."
+	poetry install
+
+poetry-update:
+	@echo "Updating dependencies with Poetry..."
+	poetry update
+
+# Pip installation support
+pip-install:
+	@echo "Installing package with pip in development mode..."
+	python3 -m pip install -e ".[all]"
+
+# Generate requirements.txt from Poetry for pip compatibility
+update-requirements:
+	@echo "Updating requirements.txt from Poetry dependencies..."
+	poetry export -f requirements.txt --output requirements.txt --without-hashes --with dev
+	@echo "Requirements updated successfully"
+
+# Combined installation target
+install: poetry-install update-requirements pip-install
+	@echo "Installation completed successfully"
+
+# Build distribution packages
+build-dist: clean
+	@echo "Building distribution packages..."
+	python -m pip install --upgrade build
+	python -m build
+
+# Clean build artifacts
+clean-dist:
+	@echo "Cleaning distribution artifacts..."
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info/
+
+# Upload to PyPI (test server)
+upload-test: build-dist
+	@echo "Uploading to TestPyPI..."
+	python -m pip install --upgrade twine
+	python -m twine upload --repository testpypi dist/*
+
+# Upload to PyPI (production)
+upload: build-dist
+	@echo "Uploading to PyPI..."
+	python -m pip install --upgrade twine
+	python -m twine upload dist/*
+
 # Help
 help:
 	@echo "Available targets:"
@@ -138,3 +190,7 @@ help:
 	@echo "  update         - Update dependencies using Poetry"
 	@echo "  requirements   - Generate requirements.txt from Poetry"
 	@echo "  clean          - Clean build artifacts and cache files"
+	@echo "  build-dist     - Build distribution packages"
+	@echo "  clean-dist     - Clean distribution artifacts"
+	@echo "  upload-test    - Upload to TestPyPI"
+	@echo "  upload         - Upload to PyPI"

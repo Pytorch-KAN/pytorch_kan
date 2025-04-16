@@ -8,14 +8,47 @@ PyTorch KAN is an efficient and scalable implementation of Kolmogorov-Arnold Net
 
 ## Installation
 
+You can install PyTorch KAN in several ways:
+
+### From PyPI (Recommended)
 ```bash
-# Install via pip
+# Basic installation
 pip install pytorch-kan
 
-# Or clone the repository and install locally
+# Install with all optional dependencies
+pip install pytorch-kan[all]
+
+# Install specific extras
+pip install pytorch-kan[visualization]  # For plotting utilities
+pip install pytorch-kan[notebook]       # For Jupyter notebook support
+pip install pytorch-kan[transformers]   # For transformer model support
+```
+
+### From Source
+
+Clone the repository and install locally:
+```bash
 git clone https://github.com/username/pytorch_kan.git
 cd pytorch_kan
-pip install -e .
+
+# Using pip
+pip install -e .                # Basic installation
+pip install -e ".[all]"        # Install with all optional dependencies
+
+# Using Poetry (recommended for development)
+poetry install                  # Install with all dependencies
+poetry install --no-dev        # Install without development dependencies
+```
+
+### Using Docker
+
+A Docker container with GPU support is available:
+```bash
+# Build the container
+make build
+
+# Run the container
+make container
 ```
 
 ## Key Features

@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+include pyproject.toml
+include poetry.lock
+recursive-include src *.py
+recursive-include tests *.py
+recursive-include tutorials *.py
+recursive-include docs/source *.md *.py *.rst
+prune docs/build
+prune output
+prune data
+prune kan_venv
