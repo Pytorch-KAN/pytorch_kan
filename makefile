@@ -123,13 +123,24 @@ run:
 	. ./$(VENV_NAME)/bin/activate && $(VENV_NAME)/bin/python tutorials/main.py
 
 # Poetry management
-poetry-install:
+poetry-venv:
+	@echo "Creating virtual environment for Poetry..."
+	python3 -m venv poetry_venv
+	@echo "Virtual environment created at poetry_venv"
+
+install-poetry: poetry-venv
+	@echo "Installing Poetry in virtual environment..."
+	./poetry_venv/bin/pip install poetry
+	@echo "Poetry installed successfully in virtual environment."
+
+poetry-install-dependencies: install-poetry
 	@echo "Installing dependencies with Poetry..."
-	poetry install
+	./poetry_venv/bin/poetry install
+	@echo "Project dependencies installed."
 
 poetry-update:
 	@echo "Updating dependencies with Poetry..."
-	poetry update
+	./poetry_venv/bin/poetry update
 
 # Pip installation support
 pip-install:
@@ -139,7 +150,7 @@ pip-install:
 # Generate requirements.txt from Poetry for pip compatibility
 update-requirements:
 	@echo "Updating requirements.txt from Poetry dependencies..."
-	poetry export -f requirements.txt --output requirements.txt --without-hashes --with dev
+	./poetry_venv/bin/poetry export -f requirements.txt --output requirements.txt --without-hashes --with dev
 	@echo "Requirements updated successfully"
 
 # Combined installation target
