@@ -1,6 +1,30 @@
 import torch
 from functools import lru_cache
+from pydantic import BaseModel, validator
+
 from ...basis.base import BaseBasis
+from ....utils import logger, progress, status
+
+
+class BSplineBasisParams(BaseModel):
+    order: int
+    degree: int
+    knots: torch.Tensor
+
+    @validator("order", "degree")
+    def non_negative(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("order and degree must be non-negative")
+        return v
+
+    @validator("knots")
+    def tensor_knots(cls, v):
+        if not isinstance(v, torch.Tensor):
+            raise TypeError("knots must be a torch.Tensor")
+        return v
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class BSplineBasis(BaseBasis):
@@ -16,9 +40,13 @@ class BSplineBasis(BaseBasis):
         knots: torch.Tensor
             Knot vector defining the spline segments.
         """
-        super().__init__(order)
-        self.degree = degree
-        self.knots = knots
+        params = BSplineBasisParams(order=order, degree=degree, knots=knots)
+        super().__init__(params.order)
+        self.degree = params.degree
+        self.knots = params.knots
+        logger.debug(
+            f"Initialized BSplineBasis with order={self.order}, degree={self.degree}, knots_shape={self.knots.shape}"
+        )
 
     def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
         """Evaluate B-spline basis for ``x``."""
@@ -80,8 +108,11 @@ class BSplineBasis(BaseBasis):
     def bspline_basis_expansion(x, degree, knots, num_bases):
         batch_size, input_dim = x.shape
         basis_values = torch.zeros(batch_size, input_dim, num_bases, device=x.device)
-        for i in range(num_bases):
-            for b in range(batch_size):
-                for d in range(input_dim):
-                    basis_values[b, d, i] = BSplineBasis.cox_de_boor_basis(x[b, d], i, degree, knots)
+        with status("Evaluating B-spline basis"):
+            for i in progress(range(num_bases), "Basis functions"):
+                for b in range(batch_size):
+                    for d in range(input_dim):
+                        basis_values[b, d, i] = BSplineBasis.cox_de_boor_basis(
+                            x[b, d], i, degree, knots
+                        )
         return basis_values

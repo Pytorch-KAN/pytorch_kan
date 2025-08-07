@@ -1,11 +1,53 @@
 """Orthogonal and other global-control basis functions for KAN."""
 
-import warnings
-
 import torch
 import torch.nn.functional as F
+from pydantic import BaseModel, root_validator, validator
 
 from ...basis.base import BaseBasis
+from ....utils import logger, status
+
+
+class OrthogonalPolynomialParams(BaseModel):
+    polynomial: str
+    order: int
+    alpha_size: int | None = None
+    beta_size: int | None = None
+
+    @validator("polynomial")
+    def valid_polynomial(cls, v: str) -> str:
+        allowed = {
+            "legendre",
+            "chebyshev_first",
+            "chebyshev_second",
+            "gegenbauer",
+            "hermite",
+            "laguerre",
+            "jacobi",
+        }
+        if v not in allowed:
+            raise ValueError(f"Unsupported polynomial type: {v}")
+        return v
+
+    @validator("order")
+    def non_negative(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("Order must be a non-negative integer.")
+        return v
+
+    @root_validator
+    def check_sizes(cls, values):
+        poly = values.get("polynomial")
+        alpha = values.get("alpha_size")
+        beta = values.get("beta_size")
+        if poly == "gegenbauer" and alpha is None:
+            raise ValueError("alpha_size must be specified for Gegenbauer polynomials.")
+        if poly == "jacobi" and (alpha is None or beta is None):
+            raise ValueError("alpha_size and beta_size required for Jacobi")
+        return values
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class OrthogonalPolynomial(BaseBasis):
@@ -46,17 +88,14 @@ class OrthogonalPolynomial(BaseBasis):
             polynomials.
         device: torch.device, optional
             Device on which internal parameters should be allocated.
-
-        Raises
-        ------
-        ValueError
-            If an unsupported polynomial type is specified or if ``order`` is
-            negative.
         """
-        device = device if device is not None else torch.device(
-            'cuda' if torch.cuda.is_available() else 'cpu'
+        params = OrthogonalPolynomialParams(
+            polynomial=polynomial, order=order, alpha_size=alpha_size, beta_size=beta_size
         )
-        super().__init__(order, device=device)
+        device = device if device is not None else torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
+        super().__init__(params.order, device=device)
         self.POLY_WRAPPER = {
             "legendre": self._legendre_matrix,
             "chebyshev_first": self._chebyshev_first_matrix,
@@ -66,26 +105,25 @@ class OrthogonalPolynomial(BaseBasis):
             "laguerre": self._laguerre_matrix,
             "jacobi": self._jacobi_matrix,
         }
-
-        assert (
-            polynomial in self.POLY_WRAPPER.keys()
-        ), f"Unsupported polynomial type: {polynomial}"
-        assert order >= 0, "Order must be a non-negative integer."
-
-        self.polynomial = polynomial
+        self.polynomial = params.polynomial
+        logger.debug(
+            f"Initialized OrthogonalPolynomial with polynomial={self.polynomial}, order={self.order}"
+        )
 
         if self.polynomial == "gegenbauer":
-            assert alpha_size is not None, "alpha_size must be specified for Gegenbauer polynomials."
             self.activation = torch.nn.SiLU()
-            self.alpha = torch.nn.Parameter(torch.rand(alpha_size, device=self.device), requires_grad=True)
+            self.alpha = torch.nn.Parameter(
+                torch.rand(params.alpha_size, device=self.device), requires_grad=True
+            )
 
         if self.polynomial == "jacobi":
-            assert (
-                alpha_size is not None and beta_size is not None
-            ), "alpha_size and beta_size required for Jacobi"
             self.activation = torch.nn.SiLU()
-            self.alpha = torch.nn.Parameter(torch.rand(alpha_size, device=self.device), requires_grad=True)
-            self.beta = torch.nn.Parameter(torch.rand(beta_size, device=self.device), requires_grad=True)
+            self.alpha = torch.nn.Parameter(
+                torch.rand(params.alpha_size, device=self.device), requires_grad=True
+            )
+            self.beta = torch.nn.Parameter(
+                torch.rand(params.beta_size, device=self.device), requires_grad=True
+            )
 
     def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
         """Calculate the orthogonal polynomial basis tensor for ``x``.
@@ -107,8 +145,8 @@ class OrthogonalPolynomial(BaseBasis):
             If the dimensions of ``alpha`` or ``beta`` parameters do not match
             the feature dimension of ``x``.
         """
-        if hasattr(self, 'alpha') and self.alpha.device != x.device or (
-            hasattr(self, 'beta') and self.beta.device != x.device
+        if hasattr(self, "alpha") and self.alpha.device != x.device or (
+            hasattr(self, "beta") and self.beta.device != x.device
         ):
             self.to(x.device)
 
@@ -125,7 +163,8 @@ class OrthogonalPolynomial(BaseBasis):
                     f"alpha {self.alpha.shape[0]}, beta {self.beta.shape[0]}, feature {feature_dim}."
                 )
 
-        return self.POLY_WRAPPER[self.polynomial](x)
+        with status(f"Computing {self.polynomial} basis"):
+            return self.POLY_WRAPPER[self.polynomial](x)
 
     def _legendre_matrix(self, x: torch.Tensor) -> torch.Tensor:
         """

@@ -12,3 +12,6 @@ jupyter
 notebook
 seaborn
 plotly
+loguru
+rich
+pydantic
