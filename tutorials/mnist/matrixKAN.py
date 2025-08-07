@@ -8,7 +8,7 @@ import time
 import numpy as np
 
 # Import MatrixKAN layer
-from src.nn.layers import MatrixKANLayer
+from kan.nn.local_control.layers import MatrixKANLayer
 
 
 class MatrixKANMNISTModel(nn.Module):

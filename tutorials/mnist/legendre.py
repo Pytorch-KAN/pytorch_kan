@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import time
 import numpy as np
-from src.basis.globals import OrthogonalPolynomial
+from kan.nn.global_control.basis import OrthogonalPolynomial
 
 
 class LegendreKANLayer(nn.Module):
