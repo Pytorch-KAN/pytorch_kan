@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.datasets import make_regression
-from src.basis.locals import *
-from src.nn.layers import MatrixKANLayer
+from kan.nn.local_control.basis import *
+from kan.nn.local_control.layers import MatrixKANLayer
 
 # Generate input tensor: 1000 samples, 10 features
 X_train = torch.rand(1000, 10)
