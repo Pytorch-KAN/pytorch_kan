@@ -7,9 +7,26 @@ helpers.
 """
 
 from abc import ABC, abstractmethod
-import warnings
 
 import torch
+from pydantic import BaseModel, validator
+
+from ...utils import logger
+
+
+class BaseBasisParams(BaseModel):
+    order: int
+    device: torch.device | None = None
+    dtype: torch.dtype | None = None
+
+    @validator("order")
+    def non_negative(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("order must be non-negative")
+        return v
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class BaseBasis(ABC):
@@ -28,9 +45,13 @@ class BaseBasis(ABC):
     """
 
     def __init__(self, order: int, device=None, dtype=None):
-        self.order = order
-        self.device = device
-        self.dtype = dtype
+        params = BaseBasisParams(order=order, device=device, dtype=dtype)
+        self.order = params.order
+        self.device = params.device
+        self.dtype = params.dtype
+        logger.debug(
+            f"Initialized {self.__class__.__name__} with order={self.order}, device={self.device}, dtype={self.dtype}"
+        )
 
     @abstractmethod
     def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
@@ -72,6 +93,9 @@ class BaseBasis(ABC):
         BaseBasis
             ``self`` for chaining.
         """
+        logger.debug(
+            f"Moving {self.__class__.__name__} to device={device}, dtype={dtype}"
+        )
         for name, value in self.__dict__.items():
             if isinstance(value, torch.Tensor):
                 setattr(self, name, value.to(device=device, dtype=dtype))
@@ -83,6 +107,9 @@ class BaseBasis(ABC):
         if dtype is not None:
             self.dtype = dtype
 
+        logger.info(
+            f"{self.__class__.__name__} now on device={self.device}, dtype={self.dtype}"
+        )
         return self
 
     def visualize_polynomial(self, x: torch.Tensor, indices: tuple[int, int]):
@@ -109,11 +136,9 @@ class BaseBasis(ABC):
 
         try:
             import plotly.graph_objects as go
-        except ImportError as exc:
-            warnings.warn(
-                "plotly is not installed. Visualization not available. "
-                "Install plotly to enable this feature.",
-                UserWarning,
+        except ImportError:
+            logger.warning(
+                "plotly is not installed. Visualization not available. Install plotly to enable this feature."
             )
             return
 
