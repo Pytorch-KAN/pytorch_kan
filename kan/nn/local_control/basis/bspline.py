@@ -7,11 +7,21 @@ class BSplineBasis(BaseBasis):
     """B-spline basis functions for local control."""
 
     def __init__(self, order: int, degree: int, knots: torch.Tensor):
+        """Parameters
+        ----------
+        order: int
+            Number of spline basis functions.
+        degree: int
+            Polynomial degree of the splines.
+        knots: torch.Tensor
+            Knot vector defining the spline segments.
+        """
         super().__init__(order)
         self.degree = degree
         self.knots = knots
 
     def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
+        """Evaluate B-spline basis for ``x``."""
         return self.bspline_basis_expansion(x, self.degree, self.knots, self.order)
 
     @staticmethod
