@@ -1,15 +1,21 @@
 import torch
 import torch.nn as nn
 from ..basis.bspline import BSplineBasis
+from .base import LocalControlKANLayer
 
 
-class MatrixKANLayer(nn.Module):
+class MatrixKANLayer(LocalControlKANLayer):
     """KAN layer with B-spline basis and local control."""
 
-    def __init__(self, input_dim, output_dim, spline_degree=3, grid_size=100, grid_epsilon=1e-6):
-        super().__init__()
-        self.input_dim = input_dim
-        self.output_dim = output_dim
+    def __init__(
+        self,
+        input_dim,
+        output_dim,
+        spline_degree=3,
+        grid_size=100,
+        grid_epsilon=1e-6,
+    ):
+        super().__init__(input_dim, output_dim)
         self.spline_degree = spline_degree
         self.grid_size = grid_size
         self.grid_epsilon = grid_epsilon
@@ -24,9 +30,6 @@ class MatrixKANLayer(nn.Module):
             torch.zeros(input_dim, output_dim, grid_size, spline_degree + 1)
         )
         nn.init.kaiming_uniform_(self.poly_matrix, mode="fan_in", nonlinearity="relu")
-
-        # Layer normalization for input standardization
-        self.norm = nn.LayerNorm(input_dim)
 
     def forward(self, x):
         batch_size = x.size(0)
