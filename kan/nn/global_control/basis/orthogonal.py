@@ -1,5 +1,10 @@
+"""Orthogonal and other global-control basis functions for KAN."""
+
+import warnings
+
 import torch
 import torch.nn.functional as F
+
 from ...basis.base import BaseBasis
 
 
@@ -23,19 +28,35 @@ class OrthogonalPolynomial(BaseBasis):
     def __init__(
         self, polynomial: str, order: int, alpha_size: int = None, beta_size: int = None, device=None
     ):
-        """
-        Initialize the OrthogonalPolynomial instance.
+        """Initialize the :class:`OrthogonalPolynomial` instance.
 
-        Args:
-            polynomial (str): The type of orthogonal polynomial ('legendre', 'chebyshev_first', 'chebyshev_second', or 'gegenbauer').
-            order (int): The order of the polynomial.
-            activation (torch.nn.Module, optional): Activation function to be applied. Defaults to None.
-            alpha (torch.Tensor, optional): Parameter for Gegenbauer polynomials. Defaults to None.
+        Parameters
+        ----------
+        polynomial: str
+            Type of polynomial to use.  Supported values are ``'legendre'``,
+            ``'chebyshev_first'``, ``'chebyshev_second'``, ``'gegenbauer'``,
+            ``'hermite'``, ``'laguerre'`` and ``'jacobi'``.
+        order: int
+            Order of the polynomial basis.
+        alpha_size: int, optional
+            Size of the ``alpha`` parameter vector.  Required for Gegenbauer and
+            Jacobi polynomials.
+        beta_size: int, optional
+            Size of the ``beta`` parameter vector.  Required for Jacobi
+            polynomials.
+        device: torch.device, optional
+            Device on which internal parameters should be allocated.
 
-        Raises:
-            ValueError: If an unsupported polynomial type is specified or if the order is negative.
+        Raises
+        ------
+        ValueError
+            If an unsupported polynomial type is specified or if ``order`` is
+            negative.
         """
-        super().__init__(order)
+        device = device if device is not None else torch.device(
+            'cuda' if torch.cuda.is_available() else 'cpu'
+        )
+        super().__init__(order, device=device)
         self.POLY_WRAPPER = {
             "legendre": self._legendre_matrix,
             "chebyshev_first": self._chebyshev_first_matrix,
@@ -52,18 +73,11 @@ class OrthogonalPolynomial(BaseBasis):
         assert order >= 0, "Order must be a non-negative integer."
 
         self.polynomial = polynomial
-        self.order = order
-        self.device = device if device is not None else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         if self.polynomial == "gegenbauer":
-            assert (
-                alpha_size is not None
-            ), "alpha_size must be specified for Gegenbauer polynomials."
+            assert alpha_size is not None, "alpha_size must be specified for Gegenbauer polynomials."
             self.activation = torch.nn.SiLU()
-            # Initialize alpha as a vector instead of a matrix
-            self.alpha = torch.nn.Parameter(
-                torch.rand(alpha_size, device=self.device), requires_grad=True
-            )
+            self.alpha = torch.nn.Parameter(torch.rand(alpha_size, device=self.device), requires_grad=True)
 
         if self.polynomial == "jacobi":
             assert (
@@ -73,23 +87,44 @@ class OrthogonalPolynomial(BaseBasis):
             self.alpha = torch.nn.Parameter(torch.rand(alpha_size, device=self.device), requires_grad=True)
             self.beta = torch.nn.Parameter(torch.rand(beta_size, device=self.device), requires_grad=True)
 
-    def to(self, device):
-        """Move the model parameters to the specified device."""
-        self.device = device
-        if hasattr(self, 'alpha'):
-            self.alpha = self.alpha.to(device)
-        if hasattr(self, 'beta'):
-            self.beta = self.beta.to(device)
-        return self
-
     def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
+        """Calculate the orthogonal polynomial basis tensor for ``x``.
+
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input tensor of shape ``(batch, features)``.
+
+        Returns
+        -------
+        torch.Tensor
+            Basis tensor with an additional dimension containing ``order``
+            polynomials.
+
+        Raises
+        ------
+        ValueError
+            If the dimensions of ``alpha`` or ``beta`` parameters do not match
+            the feature dimension of ``x``.
         """
-        Calculate the orthogonal polynomial basis tensor for the given input.
-        The calculation will be performed on the same device as the input tensor.
-        """
-        # Move to same device as input if needed
-        if hasattr(self, 'alpha') and self.alpha.device != x.device:
+        if hasattr(self, 'alpha') and self.alpha.device != x.device or (
+            hasattr(self, 'beta') and self.beta.device != x.device
+        ):
             self.to(x.device)
+
+        feature_dim = x.shape[-1]
+        if self.polynomial == "gegenbauer":
+            if feature_dim != self.alpha.shape[0]:
+                raise ValueError(
+                    f"Gegenbauer alpha size ({self.alpha.shape[0]}) does not match input feature dimension ({feature_dim})."
+                )
+        if self.polynomial == "jacobi":
+            if feature_dim != self.alpha.shape[0] or feature_dim != self.beta.shape[0]:
+                raise ValueError(
+                    "Jacobi alpha/beta sizes do not match input feature dimension: "
+                    f"alpha {self.alpha.shape[0]}, beta {self.beta.shape[0]}, feature {feature_dim}."
+                )
+
         return self.POLY_WRAPPER[self.polynomial](x)
 
     def _legendre_matrix(self, x: torch.Tensor) -> torch.Tensor:
@@ -259,61 +294,40 @@ class OrthogonalPolynomial(BaseBasis):
 
 
 class FourierBasis(BaseBasis):
-    """
-    A class for calculating Fourier basis tensors used in Kolmogorov-Arnold Networks (KAN).
-
-    Attributes:
-        order (int): The order of the Fourier basis.
-    
-    Raises:
-        ValueError: If the order is negative.
-    """
+    """Fourier basis with sine and cosine components."""
 
     def __init__(self, order: int):
-        """
-        Initialize the FourierBasis instance.
-
-        Args:
-            order (int): The order of the Fourier basis.
-
-        Raises:
-            ValueError: If the order is negative.
-        """
         assert order >= 0, "Order must be a non-negative integer."
+        super().__init__(order)
 
-        self.order = order
+    def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
+        """Calculate the Fourier basis tensor for ``x``.
+
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input tensor scaled to ``[-1, 1]``.
+
+        Returns
+        -------
+        torch.Tensor
+            Tensor containing constant, cosine and sine components with size
+            ``2*order + 1`` along the last dimension.
+        """
+        x_scaled = torch.clamp((x + 1), -1, 1) * torch.pi
+        result = torch.zeros(*x.shape, 2 * self.order + 1, device=x.device)
+        result[..., 0] = 1.0
+        for k in range(1, self.order + 1):
+            result[..., k] = torch.cos(k * x_scaled)
+            result[..., k + self.order] = torch.sin(k * x_scaled)
+        return result
 
     def calculate_fourier(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Calculate the Fourier basis tensor for the given input.
-
-        Args:
-            x (torch.Tensor): Input tensor.
-
-        Returns:
-            torch.Tensor: Calculated Fourier basis tensor with both sine and cosine components.
-        """
-        # Scale input to [0, 2π] for proper periodicity
-        x_scaled = torch.clamp((x + 1), -1, 1) * torch.pi  # Map from [-1, 1] to [-π, π]
-        
-        # Initialize result tensor with 2*order+1 basis functions:
-        # - 1 constant function (DC component)
-        # - order sine functions
-        # - order cosine functions
-        result = torch.zeros(*x.shape, 2 * self.order + 1, device=x.device)
-        
-        # DC component (constant)
-        result[..., 0] = 1.0
-        
-        # Generate frequency components
-        for k in range(1, self.order + 1):
-            # Cosine components: cos(kπx)
-            result[..., k] = torch.cos(k * x_scaled)
-            
-            # Sine components: sin(kπx)
-            result[..., k + self.order] = torch.sin(k * x_scaled)
-        
-        return result
+        warnings.warn(
+            "calculate_fourier is deprecated; use calculate_basis instead",
+            DeprecationWarning,
+        )
+        return self.calculate_basis(x)
 
 
 class SmoothActivationBasis(BaseBasis):
@@ -365,17 +379,16 @@ class SmoothActivationBasis(BaseBasis):
         self.alpha = alpha
         self.beta = beta
         
-    def calculate_activation(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Calculate the basis tensor using the specified smooth activation function for the given input.
-
-        Args:
-            x (torch.Tensor): Input tensor.
-
-        Returns:
-            torch.Tensor: Calculated basis tensor using the specified activation function.
-        """
+    def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
+        """Calculate the basis tensor using the selected activation function."""
         return self.ACTIVATION_WRAPPER[self.activation_type](x)
+
+    def calculate_activation(self, x: torch.Tensor) -> torch.Tensor:
+        warnings.warn(
+            "calculate_activation is deprecated; use calculate_basis instead",
+            DeprecationWarning,
+        )
+        return self.calculate_basis(x)
     
     def _silu(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -429,8 +442,10 @@ class SmoothActivationBasis(BaseBasis):
 
 
 class WaveletBasis(BaseBasis):
+    """Prototype Haar wavelet basis for experimentation."""
+
     def __init__(self, order: int):
-        self.order = order
+        super().__init__(order)
 
     def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
         batch_size, input_dim = x.shape
@@ -442,20 +457,5 @@ class WaveletBasis(BaseBasis):
     def haar_wavelet(self, x: torch.Tensor, order: int) -> torch.Tensor:
         if order == 0:
             return torch.ones_like(x)
-        else:
-            k = 2 ** (order - 1)
-            return torch.where((x >= 0) & (x < 1 / k), 1, -1)
-
-
-class FourierBasis(BaseBasis):
-    def __init__(self, order: int):
-        self.order = order
-
-    def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
-        x_scaled = torch.clamp((x + 1), -1, 1) * torch.pi
-        result = torch.zeros(*x.shape, 2 * self.order + 1, device=x.device)
-        result[..., 0] = 1.0
-        for k in range(1, self.order + 1):
-            result[..., k] = torch.cos(k * x_scaled)
-            result[..., k + self.order] = torch.sin(k * x_scaled)
-        return result
+        k = 2 ** (order - 1)
+        return torch.where((x >= 0) & (x < 1 / k), 1, -1)
