@@ -1,5 +1,6 @@
 """Orthogonal and other global-control basis functions for KAN."""
 
+import warnings
 import torch
 import torch.nn.functional as F
 from pydantic import BaseModel, root_validator, validator
@@ -60,7 +61,6 @@ class OrthogonalPolynomial(BaseBasis):
     Attributes:
         polynomial (str): The type of orthogonal polynomial to use.
         order (int): The order of the polynomial.
-        activation (torch.nn.Module): Activation function to be applied (if any).
         alpha (torch.Tensor): Parameter for Gegenbauer polynomials.
 
     Raises:
@@ -111,19 +111,33 @@ class OrthogonalPolynomial(BaseBasis):
         )
 
         if self.polynomial == "gegenbauer":
-            self.activation = torch.nn.SiLU()
-            self.alpha = torch.nn.Parameter(
-                torch.rand(params.alpha_size, device=self.device), requires_grad=True
+            assert params.alpha_size is not None, "alpha_size must be specified for Gegenbauer polynomials."
+            self._alpha_raw = torch.nn.Parameter(
+                torch.zeros(params.alpha_size, device=self.device)
             )
 
         if self.polynomial == "jacobi":
-            self.activation = torch.nn.SiLU()
-            self.alpha = torch.nn.Parameter(
-                torch.rand(params.alpha_size, device=self.device), requires_grad=True
+            assert (
+                params.alpha_size is not None and params.beta_size is not None
+            ), "alpha_size and beta_size required for Jacobi"
+            self._alpha_raw = torch.nn.Parameter(
+                torch.zeros(params.alpha_size, device=self.device)
             )
-            self.beta = torch.nn.Parameter(
-                torch.rand(params.beta_size, device=self.device), requires_grad=True
+            self._beta_raw = torch.nn.Parameter(
+                torch.zeros(params.beta_size, device=self.device)
             )
+
+    @property
+    def alpha(self):
+        if not hasattr(self, "_alpha_raw"):
+            raise AttributeError("alpha not defined for this polynomial")
+        return F.softplus(self._alpha_raw) - 0.5 + 1e-6
+
+    @property
+    def beta(self):
+        if not hasattr(self, "_beta_raw"):
+            raise AttributeError("beta not defined for this polynomial")
+        return F.softplus(self._beta_raw) - 1.0 + 1e-6
 
     def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
         """Calculate the orthogonal polynomial basis tensor for ``x``.
@@ -145,22 +159,23 @@ class OrthogonalPolynomial(BaseBasis):
             If the dimensions of ``alpha`` or ``beta`` parameters do not match
             the feature dimension of ``x``.
         """
-        if hasattr(self, "alpha") and self.alpha.device != x.device or (
-            hasattr(self, "beta") and self.beta.device != x.device
-        ):
-            self.to(x.device)
+        if x.device != self.device:
+            raise RuntimeError(
+                f"OrthogonalPolynomial expected device {self.device}, got {x.device}. "
+                "Move the module with .to(x.device) before calling forward."
+            )
 
         feature_dim = x.shape[-1]
         if self.polynomial == "gegenbauer":
-            if feature_dim != self.alpha.shape[0]:
+            if feature_dim != self._alpha_raw.shape[0]:
                 raise ValueError(
-                    f"Gegenbauer alpha size ({self.alpha.shape[0]}) does not match input feature dimension ({feature_dim})."
+                    f"Gegenbauer alpha size ({self._alpha_raw.shape[0]}) does not match input feature dimension ({feature_dim})."
                 )
         if self.polynomial == "jacobi":
-            if feature_dim != self.alpha.shape[0] or feature_dim != self.beta.shape[0]:
+            if feature_dim != self._alpha_raw.shape[0] or feature_dim != self._beta_raw.shape[0]:
                 raise ValueError(
                     "Jacobi alpha/beta sizes do not match input feature dimension: "
-                    f"alpha {self.alpha.shape[0]}, beta {self.beta.shape[0]}, feature {feature_dim}."
+                    f"alpha {self._alpha_raw.shape[0]}, beta {self._beta_raw.shape[0]}, feature {feature_dim}."
                 )
 
         with status(f"Computing {self.polynomial} basis"):
@@ -176,160 +191,127 @@ class OrthogonalPolynomial(BaseBasis):
         Returns:
             torch.Tensor: Legendre polynomial basis tensor.
         """
-        # Create first two polynomials: P_0(x) = 1
-        p0 = torch.ones_like(x)
-        polys = [p0]
-        
+        B, I = x.shape
+        P = self.order + 1
+        polys = torch.empty(B, I, P, device=x.device, dtype=x.dtype)
+        polys[..., 0] = 1.0
         if self.order > 0:
-            p1 = x.clone()  # P_1(x) = x
-            polys.append(p1)
-            
-            # Recursively compute higher-order polynomials
-            for n in range(2, self.order + 1):
+            polys[..., 1] = x
+            for n in range(2, P):
                 coeff1 = (2 * n - 1) / n
                 coeff2 = (n - 1) / n
-                pn = coeff1 * x * polys[n-1] - coeff2 * polys[n-2]
-                polys.append(pn)
-        
-        # Stack along a new dimension
-        return torch.stack(polys, dim=-1)
+                prev1 = polys[..., n - 1].clone()
+                prev2 = polys[..., n - 2].clone()
+                polys[..., n] = coeff1 * x * prev1 - coeff2 * prev2
+        return polys
 
     def _chebyshev_first_matrix(self, x: torch.Tensor) -> torch.Tensor:
         """
         Calculate the Chebyshev polynomial (first kind) basis tensor.
         """
-        # Create first two polynomials: T_0(x) = 1
-        p0 = torch.ones_like(x)
-        polys = [p0]
-        
+        B, I = x.shape
+        P = self.order + 1
+        polys = torch.empty(B, I, P, device=x.device, dtype=x.dtype)
+        polys[..., 0] = 1.0
         if self.order > 0:
-            p1 = x.clone()  # T_1(x) = x
-            polys.append(p1)
-            
-            # Recursively compute higher-order polynomials
-            for n in range(2, self.order + 1):
-                pn = 2 * x * polys[n-1] - polys[n-2]
-                polys.append(pn)
-        
-        return torch.stack(polys, dim=-1)
+            polys[..., 1] = x
+            for n in range(2, P):
+                prev1 = polys[..., n - 1].clone()
+                prev2 = polys[..., n - 2].clone()
+                polys[..., n] = 2 * x * prev1 - prev2
+        return polys
 
     def _chebyshev_second_matrix(self, x: torch.Tensor) -> torch.Tensor:
         """
         Calculate the Chebyshev polynomial (second kind) basis tensor.
         """
-        # Create first two polynomials: U_0(x) = 1
-        p0 = torch.ones_like(x)
-        polys = [p0]
-        
+        B, I = x.shape
+        P = self.order + 1
+        polys = torch.empty(B, I, P, device=x.device, dtype=x.dtype)
+        polys[..., 0] = 1.0
         if self.order > 0:
-            p1 = 2 * x.clone()  # U_1(x) = 2x
-            polys.append(p1)
-            
-            # Recursively compute higher-order polynomials
-            for n in range(2, self.order + 1):
-                pn = 2 * x * polys[n-1] - polys[n-2]
-                polys.append(pn)
-        
-        return torch.stack(polys, dim=-1)
+            polys[..., 1] = 2 * x
+            for n in range(2, P):
+                prev1 = polys[..., n - 1].clone()
+                prev2 = polys[..., n - 2].clone()
+                polys[..., n] = 2 * x * prev1 - prev2
+        return polys
 
     def _gegenbauer_matrix(self, x: torch.Tensor) -> torch.Tensor:
         """
         Calculate the Gegenbauer polynomial basis tensor.
         """
-        constrained_alpha = self.activation(self.alpha).unsqueeze(0)  # Add batch dimension
-        
-        # Create first two polynomials: C_0(x) = 1
-        p0 = torch.ones_like(x)
-        polys = [p0]
-        
+        B, I = x.shape
+        P = self.order + 1
+        a = self.alpha.unsqueeze(0)
+        polys = torch.empty(B, I, P, device=x.device, dtype=x.dtype)
+        polys[..., 0] = 1.0
         if self.order > 0:
-            # Broadcast alpha for proper multiplication: [1, input_dim] * [batch_size, input_dim]
-            p1 = 2 * constrained_alpha * x.clone()  # C_1(x) = 2αx
-            polys.append(p1)
-            
-            # Recursively compute higher-order polynomials
-            for n in range(2, self.order + 1):
-                # Calculate coefficients with proper broadcasting
-                coeff1 = 2 * (n + constrained_alpha - 1) / n
-                coeff2 = (n + 2 * constrained_alpha - 2) / n
-                
-                pn = coeff1 * x * polys[n-1] - coeff2 * polys[n-2]
-                polys.append(pn)
-        
-        return torch.stack(polys, dim=-1)
+            polys[..., 1] = 2 * a * x
+            for n in range(2, P):
+                coeff1 = 2 * (n + a - 1) / n
+                coeff2 = (n + 2 * a - 2) / n
+                prev1 = polys[..., n - 1].clone()
+                prev2 = polys[..., n - 2].clone()
+                polys[..., n] = coeff1 * x * prev1 - coeff2 * prev2
+        return polys
 
     def _hermite_matrix(self, x: torch.Tensor) -> torch.Tensor:
         """
         Calculate the Physicists' Hermite polynomial basis tensor.
         """
-        # Create first two polynomials: H_0(x) = 1
-        p0 = torch.ones_like(x)
-        polys = [p0]
-        
+        B, I = x.shape
+        P = self.order + 1
+        polys = torch.empty(B, I, P, device=x.device, dtype=x.dtype)
+        polys[..., 0] = 1.0
         if self.order > 0:
-            p1 = 2 * x.clone()  # H_1(x) = 2x
-            polys.append(p1)
-            
-            # Recursively compute higher-order polynomials
-            for n in range(2, self.order + 1):
-                pn = 2 * x * polys[n-1] - 2 * (n - 1) * polys[n-2]
-                polys.append(pn)
-        
-        return torch.stack(polys, dim=-1)
+            polys[..., 1] = 2 * x
+            for n in range(2, P):
+                prev1 = polys[..., n - 1].clone()
+                prev2 = polys[..., n - 2].clone()
+                polys[..., n] = 2 * x * prev1 - 2 * (n - 1) * prev2
+        return polys
 
     def _laguerre_matrix(self, x: torch.Tensor) -> torch.Tensor:
         """
         Calculate the Laguerre polynomial basis tensor.
         """
-        # Create first two polynomials: L_0(x) = 1
-        p0 = torch.ones_like(x)
-        polys = [p0]
-        
+        B, I = x.shape
+        P = self.order + 1
+        polys = torch.empty(B, I, P, device=x.device, dtype=x.dtype)
+        polys[..., 0] = 1.0
         if self.order > 0:
-            p1 = 1 - x.clone()  # L_1(x) = 1 - x
-            polys.append(p1)
-            
-            # Recursively compute higher-order polynomials
-            for n in range(2, self.order + 1):
+            polys[..., 1] = 1 - x
+            for n in range(2, P):
                 coeff1 = (2 * n - 1) / n
                 coeff2 = (n - 1) / n
-                pn = (coeff1 - x) * polys[n-1] - coeff2 * polys[n-2]
-                polys.append(pn)
-        
-        return torch.stack(polys, dim=-1)
+                prev1 = polys[..., n - 1].clone()
+                prev2 = polys[..., n - 2].clone()
+                polys[..., n] = (coeff1 - x) * prev1 - coeff2 * prev2
+        return polys
 
     def _jacobi_matrix(self, x: torch.Tensor) -> torch.Tensor:
         """
         Calculate the Jacobi polynomial basis tensor.
         """
-        # Add batch dimension for broadcasting
-        constrained_alpha = self.activation(self.alpha).unsqueeze(0)
-        constrained_beta = self.activation(self.beta).unsqueeze(0)
-        
-        # Create first polynomial: P_0(x) = 1
-        p0 = torch.ones_like(x)
-        polys = [p0]
-        
+        B, I = x.shape
+        P = self.order + 1
+        a = self.alpha.unsqueeze(0)
+        b = self.beta.unsqueeze(0)
+        polys = torch.empty(B, I, P, device=x.device, dtype=x.dtype)
+        polys[..., 0] = 1.0
         if self.order > 0:
-            # P_1(x) = 0.5 * ((α - β) + (α + β + 2)x)
-            p1 = 0.5 * ((constrained_alpha - constrained_beta) + 
-                       (constrained_alpha + constrained_beta + 2) * x.clone())
-            polys.append(p1)
-            
-            # Recursively compute higher-order polynomials
-            for n in range(2, self.order + 1):
-                A = 2 * n * (n + constrained_alpha + constrained_beta) * (2 * n + constrained_alpha + constrained_beta - 2)
-                B = (2 * n + constrained_alpha + constrained_beta - 1) * (
-                    constrained_alpha**2 - constrained_beta**2 + 
-                    x * (2 * n + constrained_alpha + constrained_beta - 2) * 
-                    (2 * n + constrained_alpha + constrained_beta)
+            polys[..., 1] = 0.5 * ((a - b) + (a + b + 2) * x)
+            for n in range(2, P):
+                A = 2 * n * (n + a + b) * (2 * n + a + b - 2)
+                Bc = (2 * n + a + b - 1) * (
+                    a**2 - b**2 + x * (2 * n + a + b - 2) * (2 * n + a + b)
                 )
-                C = 2 * (n + constrained_alpha - 1) * (n + constrained_beta - 1) * (2 * n + constrained_alpha + constrained_beta)
-                
-                pn = (B * polys[n-1] - C * polys[n-2]) / A
-                polys.append(pn)
-        
-        return torch.stack(polys, dim=-1)
+                C = 2 * (n + a - 1) * (n + b - 1) * (2 * n + a + b)
+                prev1 = polys[..., n - 1].clone()
+                prev2 = polys[..., n - 2].clone()
+                polys[..., n] = (Bc * prev1 - C * prev2) / A
+        return polys
 
 
 class FourierBasis(BaseBasis):
@@ -353,8 +335,10 @@ class FourierBasis(BaseBasis):
             Tensor containing constant, cosine and sine components with size
             ``2*order + 1`` along the last dimension.
         """
-        x_scaled = torch.clamp((x + 1), -1, 1) * torch.pi
-        result = torch.zeros(*x.shape, 2 * self.order + 1, device=x.device)
+        B, I = x.shape
+        P = 2 * self.order + 1
+        x_scaled = (x + 1.0) * torch.pi
+        result = torch.empty(B, I, P, device=x.device, dtype=x.dtype)
         result[..., 0] = 1.0
         for k in range(1, self.order + 1):
             result[..., k] = torch.cos(k * x_scaled)
