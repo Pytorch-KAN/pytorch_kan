@@ -3,33 +3,41 @@ from ...basis.base import BaseBasis
 
 
 class RBFBasis(BaseBasis):
-    """Radial basis function (RBF) family for local control modules."""
+    """Per-dimension Gaussian RBFs: centers shape ``(input_dim, num_centers)``."""
 
-    def __init__(self, order: int, centers: torch.Tensor, sigma: float):
-        """Parameters
+    def __init__(self, order: int, centers: torch.Tensor):
+        """Create an RBF basis with per-dimension centres.
+
+        Parameters
         ----------
-        order: int
-            Number of basis functions.
-        centers: torch.Tensor
-            Tensor of shape ``(num_bases, input_dim)`` representing RBF centers.
-        sigma: float
-            Width parameter of the Gaussian kernels.
+        order:
+            Number of basis functions per input dimension.
+        centers:
+            Tensor containing the centres of shape ``(input_dim, order)``.
         """
+
         super().__init__(order)
-        self.centers = centers
-        self.sigma = sigma
+        self.centers = centers  # (input_dim, order)
 
-    def calculate_basis(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute RBF basis values for ``x``."""
-        return self.rbf_basis(x, self.centers, self.sigma)
+    def calculate_basis(self, x: torch.Tensor, sigma: torch.Tensor) -> torch.Tensor:
+        """Evaluate Gaussian RBFs.
 
-    @staticmethod
-    def rbf_basis(x, centers, sigma):
-        """Evaluate Gaussian RBFs for each center."""
-        batch_size, input_dim = x.shape
-        num_rbf_bases = len(centers)
-        rbf_values = torch.zeros(batch_size, input_dim, num_rbf_bases, device=x.device)
-        for i, center in enumerate(centers):
-            squared_dist = torch.sum((x.unsqueeze(2) - center.view(1, 1, -1)) ** 2, dim=-1)
-            rbf_values[:, :, i] = torch.exp(-squared_dist / (sigma ** 2))
-        return rbf_values
+        Parameters
+        ----------
+        x:
+            Input tensor of shape ``(batch, input_dim)``.
+        sigma:
+            Positive width parameter for the Gaussian kernels.
+
+        Returns
+        -------
+        torch.Tensor
+            Tensor of shape ``(batch, input_dim, order)`` containing the
+            evaluated RBF basis functions.
+        """
+
+        # x: (B, I), centers: (I, C) -> diff: (B, I, C)
+        diff = x.unsqueeze(-1) - self.centers.unsqueeze(0)
+        sq = diff * diff
+        return torch.exp(-sq / (sigma * sigma))
+
