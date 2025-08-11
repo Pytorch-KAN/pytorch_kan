@@ -18,22 +18,24 @@ The project emphasises:
 
 ## Installation
 
-The library can be installed directly from PyPI:
+The package expects a working PyTorch installation appropriate for your platform (CPU, CUDA, or ROCm). Install PyTorch first following guidance from [pytorch.org](https://pytorch.org/).
+
+- CPU-only example:
+  ```bash
+  pip install torch torchvision torchaudio
+  ```
+- CUDA example (CUDA 12.1):
+  ```bash
+  pip install --index-url https://download.pytorch.org/whl/cu121 torch torchvision torchaudio
+  ```
+
+Then install the library from PyPI:
 
 ```bash
-pip install pytorch_kan
+pip install pytorch-kan
 ```
 
-For local development, clone the repository and install in editable mode:
-
-```bash
-git clone https://github.com/yourusername/pytorch_kan.git
-cd pytorch_kan
-pip install .
-```
-
-The package expects a working PyTorch installation.  You can install PyTorch
-from [pytorch.org](https://pytorch.org/).
+For local development with all dependencies, see the Development section below.
 
 ## Getting Started
 
@@ -54,12 +56,66 @@ output2 = fourier(x)
 `local_layers`, `local_basis`, `global_layers` and `global_basis` are available
 under `kan.nn` for fine-grained control.
 
+## Development
+
+### Local (virtualenv)
+
+Requirements: Python 3.12 recommended.
+
+```bash
+git clone https://github.com/yourusername/pytorch_kan.git
+cd pytorch_kan
+python -m venv .venv
+source .venv/bin/activate
+# Install all development dependencies and the package in editable mode
+pip install -e '.[dev]'
+
+# Run tests
+pytest
+
+# Run a tutorial or your own script
+python tutorials/main.py
+```
+
+### Docker (CPU-only)
+
+Build and run the CPU dev image (uses `python:3.12-slim`, installs `-e '.[dev]'`):
+
+```bash
+make build
+make container-cpu
+```
+
+Inside the container, the project and dev dependencies are already installed. Your local repo is mounted at `/workspace`.
+
+### Docker (GPU / CUDA)
+
+Build and run the CUDA dev image. This installs CUDA-enabled PyTorch wheels (cu121) and then `-e '.[dev]'`.
+
+```bash
+make build-cuda
+make container-gpu
+```
+
+Notes:
+- Requires a compatible NVIDIA driver on the host and Docker with `--gpus all` support.
+- Adjust the CUDA wheel index URL in `Dockerfile.cuda` if you need a different CUDA version.
+
+### Packaging and Publishing
+
+Build sdist and wheel, and publish to PyPI:
+
+```bash
+make dist
+make publish  # requires TWINE_USERNAME/TWINE_PASSWORD or token configured
+```
+
 ## Repository Structure
 
 - `kan`: Python package containing KAN layers, basis functions and utilities.
 - `tests`: PyTest-based unit tests for basis functions and layers.
 - `tutorials`: Example scripts demonstrating KANs on tasks such as MNIST.
-- `requirements.txt`: Python dependencies for development.
+- `requirements.txt`: Minimal runtime pins (dev dependencies are managed via `.[dev]`).
 
 ## Running Tests
 

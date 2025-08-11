@@ -13,10 +13,22 @@ authors = [
     {name = "PyTorch KAN contributors"}
 ]
 dependencies = [
+    "numpy",
+    "pydantic"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yourusername/pytorch_kan"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["kan*"]
+
+[project.optional-dependencies]
+dev = [
     "torch",
     "torchvision",
     "torchaudio",
-    "numpy",
     "pandas",
     "matplotlib",
     "transformers",
@@ -29,12 +41,7 @@ dependencies = [
     "plotly",
     "loguru",
     "rich",
-    "pydantic"
+    "pytest",
+    "build",
+    "twine",
 ]
-
-[project.urls]
-"Homepage" = "https://github.com/yourusername/pytorch_kan"
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["kan*"]

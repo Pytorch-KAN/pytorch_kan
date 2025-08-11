@@ -12,12 +12,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy project files
-COPY . /workspace
-
-# Install the package in editable mode with all development dependencies
+# Install CUDA-enabled PyTorch (CUDA 12.1 example). Requires compatible NVIDIA driver on host.
 RUN python -m pip install --upgrade pip setuptools wheel \
- && pip install -e '.[dev]'
+ && pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu121 \
+    torch torchvision torchaudio
+
+# Copy project files and install with dev extras
+COPY . /workspace
+RUN pip install --no-cache-dir -e '.[dev]'
 
 SHELL ["/bin/bash", "-c"]
 CMD ["/bin/bash"]

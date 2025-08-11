@@ -1,17 +1,4 @@
-torch
-torchvision
-torchaudio
-numpy
-pandas
-matplotlib
-transformers
-datasets
-scipy
-scikit-learn
-jupyter
-notebook
-seaborn
-plotly
-loguru
-rich
+# Minimal runtime dependencies are managed in pyproject.toml
+# For development install with extras: pip install -e '.[dev]'
 pydantic
+numpy
