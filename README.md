@@ -18,8 +18,18 @@ The project emphasises:
 
 ## Installation
 
+The library can be installed directly from PyPI:
+
 ```bash
-pip install -r requirements.txt
+pip install pytorch_kan
+```
+
+For local development, clone the repository and install in editable mode:
+
+```bash
+git clone https://github.com/yourusername/pytorch_kan.git
+cd pytorch_kan
+pip install .
 ```
 
 The package expects a working PyTorch installation.  You can install PyTorch

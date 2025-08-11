@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytorch-kan"
+version = "0.1.0"
+description = "Efficient and scalable implementation of Kolmogorov-Arnold Networks (KANs) in PyTorch"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+authors = [
+    {name = "PyTorch KAN contributors"}
+]
+dependencies = [
+    "torch",
+    "torchvision",
+    "torchaudio",
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "transformers",
+    "datasets",
+    "scipy",
+    "scikit-learn",
+    "jupyter",
+    "notebook",
+    "seaborn",
+    "plotly",
+    "loguru",
+    "rich",
+    "pydantic"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yourusername/pytorch_kan"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["kan*"]
