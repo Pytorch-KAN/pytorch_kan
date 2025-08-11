@@ -1,8 +1,14 @@
+import os
+import sys
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from sklearn.datasets import make_regression
-from kan.nn.local_control.basis import *
+
+# Ensure the project root is on the module search path so ``kan`` can be imported
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from kan.nn.local_control.basis import *  # noqa: F401,F403 - used in tutorial
 from kan.nn.local_control.layers import MatrixKANLayer
 
 # Generate input tensor: 1000 samples, 10 features
