@@ -14,21 +14,31 @@ class OrthogonalKANLayer(GlobalControlKANLayer):
         polynomial="legendre",
         order=3,
         grid_epsilon=1e-6,
+        bias: bool = True,
         **kwargs,
     ):
         super().__init__(input_dim, output_dim, grid_epsilon)
-        self.order = order
+        self.order = int(order)
 
-        self.weights = nn.Parameter(torch.empty(input_dim, output_dim, order + 1))
-        nn.init.kaiming_uniform_(self.weights, mode="fan_in", nonlinearity="relu")
+        # (I, O, P)
+        self.weights = nn.Parameter(torch.empty(input_dim, output_dim, self.order + 1))
+        nn.init.xavier_uniform_(self.weights)
+
+        self.bias = nn.Parameter(torch.zeros(output_dim)) if bias else None
 
         self.poly_calc = OrthogonalPolynomial(
-            polynomial=polynomial, order=order, **kwargs
+            polynomial=polynomial, order=self.order, **kwargs
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.norm(x)
         x = torch.clamp(x, -1.0 + self.grid_epsilon, 1.0 - self.grid_epsilon)
-        basis_values = self.poly_calc.calculate_basis(x)
-        output = torch.einsum("bip,iop->bo", basis_values, self.weights)
+        basis_values = self.poly_calc.calculate_basis(x)  # (B, I, P)
+
+        B = basis_values.reshape(x.shape[0], -1).contiguous()
+        W = self.weights.reshape(-1, self.output_dim).contiguous()
+
+        output = B @ W
+        if self.bias is not None:
+            output = output + self.bias
         return output

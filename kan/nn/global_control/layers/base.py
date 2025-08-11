@@ -34,13 +34,20 @@ class GlobalControlKANLayer(nn.Module):
     """
 
     def __init__(
-        self, input_dim: int, output_dim: int, grid_epsilon: float = 1e-6
+        self,
+        input_dim: int,
+        output_dim: int,
+        grid_epsilon: float = 1e-6,
+        norm_eps: float = 1e-5,
+        norm_affine: bool = False,
     ) -> None:
         super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.grid_epsilon = grid_epsilon
+        self.grid_epsilon = float(grid_epsilon)
 
         # Normalise inputs before computing basis expansions
-        self.norm = nn.LayerNorm(input_dim)
+        self.norm = nn.LayerNorm(
+            input_dim, eps=norm_eps, elementwise_affine=norm_affine
+        )
 
