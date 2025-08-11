@@ -48,9 +48,9 @@ container-cpu:
 
 # Setup virtual environment inside container
 setup-venv:
-    python3 -m venv /workspace/venv && \
-    . /workspace/venv/bin/activate && \
-    pip install --no-cache-dir -e '.[dev]'
+	python3 -m venv /workspace/venv && \
+	. /workspace/venv/bin/activate && \
+	pip install --no-cache-dir -e '.[dev]'
 
 # Optional: Clean up resources when done
 clean: clean-containers clean-images
