@@ -18,14 +18,14 @@ def test_bspline_basis_partition_of_unity():
 
 
 def test_rbf_basis_values():
-    centers = torch.tensor([[0.0], [1.0]])
-    sigma = 1.0
+    centers = torch.tensor([[0.0, 1.0]])  # (input_dim, num_centers)
+    sigma = torch.tensor(1.0)
     x = torch.tensor([[0.0]])
-    basis = RBFBasis(order=2, centers=centers, sigma=sigma)
-    values = basis.calculate_basis(x)
-    expected0 = torch.exp(torch.tensor(-((0.0 - 0.0) ** 2) / (sigma ** 2)))
-    expected1 = torch.exp(torch.tensor(-((0.0 - 1.0) ** 2) / (sigma ** 2)))
-    expected = torch.tensor([[[expected0, expected1]]])
+    basis = RBFBasis(order=2, centers=centers)
+    values = basis.calculate_basis(x, sigma=sigma)
+    expected0 = torch.exp(-((x[0, 0] - centers[0, 0]) ** 2) / (sigma ** 2))
+    expected1 = torch.exp(-((x[0, 0] - centers[0, 1]) ** 2) / (sigma ** 2))
+    expected = torch.stack([expected0, expected1], dim=-1).unsqueeze(0).unsqueeze(0)
     assert values.shape == expected.shape
     assert torch.allclose(values, expected)
 
