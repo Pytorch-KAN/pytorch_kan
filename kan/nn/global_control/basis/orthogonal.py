@@ -36,7 +36,7 @@ class OrthogonalPolynomialParams(BaseModel):
             raise ValueError("Order must be a non-negative integer.")
         return v
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_sizes(cls, values):
         poly = values.get("polynomial")
         alpha = values.get("alpha_size")
