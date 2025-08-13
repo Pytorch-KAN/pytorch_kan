@@ -14,7 +14,10 @@ authors = [
 ]
 dependencies = [
     "numpy",
-    "pydantic"
+    "pydantic",
+    "loguru",
+    "rich",
+    "torch"
 ]
 
 [project.urls]
