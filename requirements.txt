@@ -2,3 +2,6 @@
 # For development install with extras: pip install -e '.[dev]'
 pydantic
 numpy
+loguru
+rich
+torch
