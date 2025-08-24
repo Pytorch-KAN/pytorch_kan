@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import time
 import numpy as np
-from src.basis.globals import OrthogonalPolynomial
+from kan.nn.global_control.basis import OrthogonalPolynomial
 
 class HermiteKANLayer(nn.Module):
     def __init__(self, input_dim, output_dim, order=3, grid_epsilon=1e-6):
